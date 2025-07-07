@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # Backend Service
+  backend:
+    build:
+      context: ./avance-salaire-backend
+      dockerfile: Dockerfile
+    ports:
+      - "9009:9009"
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_URL=jdbc:h2:mem:testdb
+      - DB_USERNAME=sa
+      - DB_PASSWORD=password
+      - JWT_SECRET=dev-secret-key-change-in-production
+      - JWT_EXPIRATION=86400000
+      - CORS_ALLOWED_ORIGINS=http://localhost:4200
+      - RECAPTCHA_SECRET=6Lc7-nMrAAAAAF3UXst23o5_lDC2sPGkyvtjpiAo
+    volumes:
+      - ./avance-salaire-backend:/app
+      - /app/target
+    networks:
+      - soprahr-network
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./avance-salaire-frontend
+      dockerfile: Dockerfile
+    ports:
+      - "4200:4200"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./avance-salaire-frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - soprahr-network
+
+  # Database (for production-like testing)
+  mysql:
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpassword
+      - MYSQL_DATABASE=soprahr
+      - MYSQL_USER=soprahr
+      - MYSQL_PASSWORD=soprahr123
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./avance-salaire-backend/src/main/resources/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - soprahr-network
+
+networks:
+  soprahr-network:
+    driver: bridge
+
+volumes:
+  mysql_data: 

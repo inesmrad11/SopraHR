@@ -1,19 +1,61 @@
 package com.soprahr.avancesalairebackend.controller;
 
+import com.soprahr.avancesalairebackend.model.request.AuthenticationRequest;
+import com.soprahr.avancesalairebackend.model.response.AuthenticationResponse;
 import com.soprahr.avancesalairebackend.repository.UserRepository;
+import com.soprahr.avancesalairebackend.service.authentication.AuthenticationService;
 import com.soprahr.avancesalairebackend.service.user.JwtService;
 import com.soprahr.avancesalairebackend.service.user.OtpService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
+    @Autowired
     private final UserRepository userRepository;
+    @Autowired
     private final JwtService jwtService;
+    @Autowired
     private final OtpService otpService;
+    @Autowired
+    private final AuthenticationService authenticationService;
+
+    /**
+     * Authenticate user with email and password
+     * @param request Authentication request containing email, password, and optional reCAPTCHA token
+     * @return JWT token and success message
+     */
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody AuthenticationRequest request) {
+        try {
+            AuthenticationResponse response = authenticationService.authenticate(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Refresh authentication token
+     * @return New JWT token
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String authHeader) {
+        try {
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String refreshToken = authHeader.substring(7);
+                AuthenticationResponse response = authenticationService.refreshToken(refreshToken);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.badRequest().body("Invalid authorization header");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     /**
      * Send OTP to user's email for 2FA
@@ -60,6 +102,29 @@ public class AuthController {
             return ResponseEntity.ok(jwtToken);
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Erreur lors de la vérification du code");
+        }
+    }
+
+    /**
+     * Unlock user account (for development/testing purposes)
+     * @param email User's email
+     * @return Success message
+     */
+    @PostMapping("/unlock-account")
+    public ResponseEntity<?> unlockAccount(@RequestParam String email) {
+        try {
+            var user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
+            
+            // Reset failed attempts and unlock account
+            user.setFailedAttempts(0);
+            user.setLockTime(null);
+            user.setEnabled(true);
+            userRepository.save(user);
+            
+            return ResponseEntity.ok("Compte déverrouillé avec succès");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("Erreur lors du déverrouillage du compte");
         }
     }
 }

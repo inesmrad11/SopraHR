@@ -1,0 +1,24 @@
+<table>
+  <thead>
+    <tr>
+      <th>Montant</th>
+      <th>Date de soumission</th>
+      <th>Date nécessaire</th>
+      <th>Statut</th>
+      <th>Détails</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let req of requests">
+      <td>{{ req.amount | currency:'EUR' }}</td>
+      <td>{{ req.submitted }}</td>
+      <td>{{ req.needed }}</td>
+      <td>
+        <app-status-badge [status]="req.status"></app-status-badge>
+      </td>
+      <td>
+        <a [routerLink]="['/employee/request', req.id]">Détails</a>
+      </td>
+    </tr>
+  </tbody>
+</table> 

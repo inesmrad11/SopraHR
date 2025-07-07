@@ -20,12 +20,13 @@ import java.util.Collection;
 import java.util.List;
 
 @Entity
+@Table(name = "users")
 @Data
 @Builder(builderMethodName = "userBuilder")
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString(exclude = {"password"})
-@EqualsAndHashCode(exclude = {"requests", "notifications", "feedbacks", "actions", "company"})
+@EqualsAndHashCode(exclude = {"requests", "notifications", "actions"})
 public class User implements UserDetails {
 
     @Id
@@ -99,10 +100,8 @@ public class User implements UserDetails {
     @NotNull(message = "Role is mandatory")
     private UserRole role;
 
-    // ✅ Company relation
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
-    private Company company;
+    @Size(max = 100)
+    private String company;
 
     // ✅ Security methods
     @Override

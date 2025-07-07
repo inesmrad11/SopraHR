@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
@@ -26,6 +28,15 @@ public class JwtService {
     
     @Value("${jwt.refresh-expiration:604800000}")
     private long refreshExpirationMs;
+    
+    @PostConstruct
+    public void init() {
+        if (secretKey != null && !secretKey.trim().isEmpty()) {
+            System.out.println("✅ JWT_SECRET loaded successfully: " + secretKey.substring(0, Math.min(10, secretKey.length())) + "...");
+        } else {
+            System.err.println("❌ JWT_SECRET is null or empty!");
+        }
+    }
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -41,7 +52,8 @@ public class JwtService {
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         if (userDetails instanceof User user) {
             extraClaims.put("id", user.getId());
-            extraClaims.put("firstname", user.getFirstName());
+            extraClaims.put("firstName", user.getFirstName());
+            extraClaims.put("lastName", user.getLastName());
             extraClaims.put("email", user.getEmail());
             extraClaims.put("role", user.getRole().name());
         }
@@ -51,7 +63,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24))
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -89,13 +101,17 @@ public class JwtService {
 
     private Key getSignInKey() {
         try {
+            if (secretKey == null || secretKey.trim().isEmpty()) {
+                throw new IllegalStateException("JWT secret key is null or empty");
+            }
+            
             byte[] keyBytes = Decoders.BASE64.decode(secretKey);
             if (keyBytes.length < 32) { // 256 bits
-                throw new IllegalStateException("JWT secret key must be at least 256 bits (32 bytes)");
+                throw new IllegalStateException("JWT secret key must be at least 256 bits (32 bytes). Current length: " + keyBytes.length);
             }
             return Keys.hmacShaKeyFor(keyBytes);
         } catch (Exception e) {
-            throw new SecurityException("Failed to initialize JWT signing key", e);
+            throw new SecurityException("Failed to initialize JWT signing key: " + e.getMessage(), e);
         }
     }
 

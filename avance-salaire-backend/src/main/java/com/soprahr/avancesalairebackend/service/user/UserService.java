@@ -33,6 +33,7 @@ public class UserService implements IUserService {
         dto.setPhone(user.getPhone());
         dto.setStatus(user.isStatus());
         dto.setRole(user.getRole());
+        dto.setCompany(user.getCompany());
         return dto;
     }
 
@@ -46,6 +47,7 @@ public class UserService implements IUserService {
         user.setPhone(dto.getPhone());
         user.setStatus(dto.isStatus());
         user.setRole(dto.getRole());
+        user.setCompany(dto.getCompany());
     }
 
     @Override

@@ -17,8 +17,8 @@ public class EnvConfig {
     
     @Bean
     public JwtProperties jwtProperties(
-            @Value("${JWT_SECRET:}") String secret,
-            @Value("${JWT_EXPIRATION:86400000}") long expiration) {
+            @Value("${jwt.secret:}") String secret,
+            @Value("${jwt.expiration:86400000}") long expiration) {
         return new JwtProperties(secret, expiration);
     }
     

@@ -70,6 +70,10 @@
                         </div>
           <a href="#" class="forgot-password" (click)="onForgotPassword($event)">Mot de passe oublié ?</a>
                     </div>
+        
+                    <div class="recaptcha-center" *ngIf="environment.production">
+                      <div class="g-recaptcha" data-sitekey="6Lc7-nMrAAAAAF3UXst23o5_lDC2sPGkyvtjpiAo"></div>
+                    </div>
 
         <button type="submit" class="login-btn" [disabled]="isLoading">
           <span *ngIf="!isLoading">Se connecter</span>
@@ -86,12 +90,7 @@
             </div>
 
             <!-- Section Visuelle -->
-            <div class="visual-section">
-                <div class="geometric-shapes">
-                    <div class="shape"></div>
-                    <div class="shape"></div>
-                    <div class="shape"></div>
-                </div>
+            <div class="visual-section visual-section-bg">
                 <div class="visual-content">
                     <h2 class="visual-title">Transformez votre RH</h2>
                     <p class="visual-subtitle">Plus de 50 ans d'expertise au service de votre organisation</p>

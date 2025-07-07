@@ -15,5 +15,6 @@ public class UserDTO {
     private String phone;
     private boolean status;
     private UserRole role;
+    private String company;
     // Add other fields as needed, but NOT password!
 }
