@@ -29,11 +29,12 @@ public class SecurityConfiguration {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"));
+        // Use the exact origin of your frontend for credentials support
+        configuration.setAllowedOrigins(List.of("http://localhost:4200"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
-        configuration.setAllowCredentials(false);
+        configuration.setAllowCredentials(true); // Must be true for cookies/credentials
         configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
@@ -64,11 +65,17 @@ public class SecurityConfiguration {
                     "/configuration/ui",
                     "/swagger-resources/**",
                     "/configuration/security",
-                    "/swagger-ui.html"
+                    "/swagger-ui.html",
+                    "/ws-notifications/**",
+                    "/api/notifications/**"
                 ).permitAll()
-                // Public endpoints
+                // Public endpoints (explicitly list each one for clarity and security)
                 .requestMatchers(
-                    "/api/auth/**"
+                    "/api/auth/login",
+                    "/api/auth/register",
+                    "/api/auth/send-otp",
+                    "/api/auth/verify-otp",
+                    "/api/auth/recaptcha-verify"
                 ).permitAll()
                 // Allow preflight requests
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

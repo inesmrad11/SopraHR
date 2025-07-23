@@ -1,0 +1,20 @@
+<form class="notif-test-form" (ngSubmit)="send()">
+  <label>Destinataire (userId) :</label>
+  <input type="number" [(ngModel)]="userId" name="userId" required />
+
+  <label>Type :</label>
+  <select [(ngModel)]="type" name="type" required>
+    <option *ngFor="let t of types" [value]="t">{{ t }}</option>
+  </select>
+
+  <label>Titre :</label>
+  <input type="text" [(ngModel)]="title" name="title" required />
+
+  <label>Message :</label>
+  <textarea [(ngModel)]="message" name="message" required></textarea>
+
+  <label>Expéditeur (senderId, optionnel) :</label>
+  <input type="number" [(ngModel)]="senderId" name="senderId" />
+
+  <button type="submit">Envoyer</button>
+</form> 

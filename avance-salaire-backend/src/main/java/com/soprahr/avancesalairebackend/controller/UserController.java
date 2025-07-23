@@ -5,8 +5,11 @@ import com.soprahr.avancesalairebackend.service.user.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.soprahr.avancesalairebackend.model.entity.User;
+import com.soprahr.avancesalairebackend.repository.UserRepository;
 
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -14,6 +17,8 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     public UserController(UserService userService) {

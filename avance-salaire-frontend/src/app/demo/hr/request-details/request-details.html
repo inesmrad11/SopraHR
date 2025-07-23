@@ -1,0 +1,44 @@
+<div class="request-details-container" *ngIf="request && employee">
+  <div class="back-row">
+    <button class="btn btn-outline" routerLink="/hr/requests">← Retour à la liste</button>
+  </div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+  <div class="details-card" [ngClass]="statusColor">
+    <div class="header-row">
+      <div class="employee-info">
+        <div class="name">{{ employee.firstName }} {{ employee.lastName }}</div>
+        <div class="meta">Département : {{ employee.department || 'N/A' }}</div>
+        <div class="meta">Salaire net : <b>{{ employee.salary | number:'1.2-2' }} TND</b></div>
+      </div>
+      <div class="status-block">
+        <span class="status-label">{{ getStatusLabel(request.status) }}</span>
+      </div>
+    </div>
+    <div class="request-info">
+      <div>Montant demandé : <b>{{ request.requestedAmount | number:'1.2-2' }} TND</b></div>
+      <div>Durée : <b>{{ request.repaymentMonths }} mois</b></div>
+      <div>Date de la demande : {{ request.requestDate | date:'shortDate' }}</div>
+    </div>
+    <div class="ceiling-info">
+      <div>Plafond autorisé : <b>{{ authorizedCeiling | number:'1.2-2' }} TND</b></div>
+      <div>Avances en cours : <b>{{ totalInProgress | number:'1.2-2' }} TND</b></div>
+      <div>Plafond disponible : <b>{{ availableCeiling | number:'1.2-2' }} TND</b></div>
+    </div>
+    <div class="history-section">
+      <app-snake-timeline [activities]="mockActivities"></app-snake-timeline>
+    </div>
+    <div class="actions-row">
+      <button class="btn btn-primary" (click)="onApprove()" [disabled]="request.status !== RequestStatus.PENDING">Valider</button>
+      <button class="btn btn-secondary" (click)="onReject()" [disabled]="request.status !== RequestStatus.PENDING">Rejeter</button>
+    </div>
+  </div>
+  <app-validation-modal
+    [visible]="modalVisible"
+    (confirm)="onModalConfirm($event)"
+    (cancel)="onModalCancel()"
+    aria-modal="true"
+    tabindex="0"
+  >
+  </app-validation-modal>
+</div>

@@ -1,0 +1,122 @@
+<div class="request-history-container">
+  <div class="filter-bar">
+    <input type="text" placeholder="Employé..." [(ngModel)]="filterEmployee" (ngModelChange)="applyFilters()" aria-label="Filtrer par employé">
+    <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()" aria-label="Filtrer par statut">
+      <option value="">Tous statuts</option>
+      <option *ngFor="let s of statusList" [value]="s">{{ s === 'APPROVED' ? 'Validée' : 'Rejetée' }}</option>
+    </select>
+    <input type="date" [(ngModel)]="filterFrom" (change)="applyFilters()" aria-label="Date de début">
+    <input type="date" [(ngModel)]="filterTo" (change)="applyFilters()" aria-label="Date de fin">
+    <button class="icon-btn" (click)="onExportExcel()" title="Exporter Excel" aria-label="Exporter Excel">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10 3V13M10 13L6 9M10 13L14 9" stroke="#28a745" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="3" y="15" width="14" height="2" rx="1" fill="#28a745" fill-opacity="0.12"/>
+      </svg>
+    </button>
+    <button class="icon-btn" (click)="onExportPdf()" title="Exporter PDF" aria-label="Exporter PDF">
+      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="3" width="14" height="14" rx="2" fill="#e74c3c" fill-opacity="0.08"/>
+        <path d="M7 7H13V13H7V7Z" stroke="#e74c3c" stroke-width="1.5"/>
+        <path d="M9 9H11V11H9V9Z" fill="#e74c3c"/>
+      </svg>
+    </button>
+  </div>
+  <div *ngIf="loading" class="loader">Chargement...</div>
+  <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+  <div class="table-responsive">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead class="table-light">
+        <tr>
+          <th (click)="sort('employeeFullName')" class="sortable table-header-main">Employé <span class="sort-arrow" [ngClass]="getSortClass('employeeFullName')"></span></th>
+          <th (click)="sort('requestedAmount')" class="sortable table-header-main">Montant <span class="sort-arrow" [ngClass]="getSortClass('requestedAmount')"></span></th>
+          <th (click)="sort('status')" class="sortable table-header-main">Statut <span class="sort-arrow" [ngClass]="getSortClass('status')"></span></th>
+          <th (click)="sort('requestDate')" class="sortable table-header-main">Date <span class="sort-arrow" [ngClass]="getSortClass('requestDate')"></span></th>
+          <th class="table-header-main">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let req of filteredRequests | paginate: { itemsPerPage: pageSize, currentPage: p, totalItems: totalItems }">
+          <td>{{ req.employeeFullName }}</td>
+          <td>{{ req.requestedAmount | number:'1.2-2' }} TND</td>
+          <td>
+            <span class="status-cadre-compact" [ngClass]="req.status === 'APPROVED' ? 'cadre-success-compact' : 'cadre-danger-compact'">
+              {{ req.status === 'APPROVED' ? 'Validée' : 'Rejetée' }}
+            </span>
+          </td>
+          <td>{{ req.requestDate | date:'yyyy-MM-dd' }}</td>
+          <td>
+            <button class="action-eye" (click)="openDetails(req)" title="Voir les détails" type="button" aria-label="Voir les détails">
+              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="11" cy="11" rx="8.5" ry="6.5" stroke="currentColor" stroke-width="2"/>
+                <circle cx="11" cy="11" r="2.5" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </td>
+        </tr>
+        <tr *ngIf="requests.length === 0">
+          <td colspan="5" class="text-center py-4">
+            <div class="text-muted">Aucune demande trouvée</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <pagination-controls
+    (pageChange)="p = $event"
+    [responsive]="true"
+    [autoHide]="true"
+    [maxSize]="7"
+    [directionLinks]="true"
+    [previousLabel]="'<'"
+    [nextLabel]="'>'"
+    *ngIf="totalItems > pageSize">
+  </pagination-controls>
+</div>
+
+<!-- Modal détails pop-up -->
+<div class="kanban-modal-backdrop" *ngIf="selectedRequest">
+  <div class="kanban-modal-popup" (click)="$event.stopPropagation()">
+    <span class="modal-close" (click)="closeDetailsModal()" aria-label="Fermer">&times;</span>
+    <h3 style="text-align:center; margin-bottom:1.5rem;">Détail de la demande</h3>
+    <div class="modal-details-grid">
+      <div><b>Salarié :</b> {{ selectedRequest.employeeFullName }}</div>
+      <div><b>Date :</b> {{ selectedRequest.requestDate | date:'shortDate' }}</div>
+      <div><b>Montant :</b> {{ selectedRequest.requestedAmount | number:'1.2-2' }} TND</div>
+      <div><b>Durée :</b> {{ selectedRequest.repaymentMonths || '?' }} mois</div>
+      <div><b>Statut :</b> <span class="status-text-lower">{{ selectedRequest.status === 'APPROVED' ? 'Validée' : selectedRequest.status === 'REJECTED' ? 'Rejetée' : 'En attente' }}</span></div>
+      <div style="grid-column: 1 / -1;"><b>Raison :</b> {{ selectedRequest.reason || '—' }}</div>
+      <div style="grid-column: 1 / -1; margin-top:0.7rem; background:#f8f9fa; border-radius:6px; padding:0.5rem 0.7rem; font-size:0.85em; line-height:1.5; max-width:340px;">
+        <div><b>Salaire net :</b> {{ selectedRequest.employeeSalaryNet | number:'1.2-2' }} TND</div>
+        <div><b>Plafond disponible :</b> {{ selectedRequest.plafondDisponible | number:'1.2-2' }} TND</div>
+        <div><b>Avances non remboursées :</b> {{ selectedRequest.totalAvancesNonRemboursees | number:'1.2-2' }} TND</div>
+      </div>
+    </div>
+    <div style="margin-top:1.5rem;">
+      <h4 style="font-size:1.1em; margin-bottom:0.7em;">Historique des statuts</h4>
+      <table *ngIf="requestStatusHistory.length" class="table table-sm" style="font-size:0.97em;">
+        <thead>
+          <tr>
+            <th>Ancien statut</th>
+            <th>Nouveau statut</th>
+            <th>Par</th>
+            <th>Commentaire</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let h of requestStatusHistory">
+            <td>{{ h.previousStatus }}</td>
+            <td>{{ h.newStatus }}</td>
+            <td>{{ h.changedBy }}</td>
+            <td>{{ h.comment || '—' }}</td>
+            <td>{{ h.changedAt | date:'short' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <div *ngIf="!requestStatusHistory.length" class="text-muted">Aucun historique de statut</div>
+    </div>
+    <div style="margin-top:1.2rem; text-align:center;">
+      <button (click)="closeDetailsModal()" style="padding:0.5rem 1.2rem; border-radius:6px; border:none; background:#a728a7; color:#fff; font-weight:600;">Fermer</button>
+    </div>
+  </div>
+</div>

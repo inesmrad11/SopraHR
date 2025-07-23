@@ -1,0 +1,104 @@
+@import '../../../../../scss/settings/color-variables.scss';
+
+.auth-login-bg-video-wrapper {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 0;
+  overflow: hidden;
+}
+.auth-login-bg-video {
+  position: absolute;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  object-fit: cover;
+  min-width: 100vw;
+  min-height: 100vh;
+  z-index: 0;
+  filter: brightness(0.7);
+}
+.auth-login-content {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+// Overlay for readability
+.auth-login-bg-video-wrapper::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(50, 21, 74, 0.45);
+  z-index: 1;
+}
+
+// Style the login button
+button, .btn, .auth-login-btn {
+  background: #32154a !important;
+  color: #fff !important;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  box-shadow: 0 4px 16px rgba(50,21,74,0.08);
+  transition: background 0.2s, box-shadow 0.2s;
+  margin-top: 18px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+button:hover, .btn:hover, .auth-login-btn:hover {
+  background: #43216a !important;
+  box-shadow: 0 6px 24px rgba(50,21,74,0.18);
+}
+
+// Remove any previous background
+:host {
+  background: none !important;
+}
+
+.auth-login-content .auth-main .auth-wrapper .auth-form .card {
+  box-shadow: 0 0 32px 0 rgba(255,255,255,0.55), 0 2px 16px 0 rgba(50,21,74,0.10);
+  border-radius: 18px;
+  border: none;
+  background: rgba(255,255,255,0.97);
+  /* Optional: add a slight blur for extra glow */
+  backdrop-filter: blur(2px);
+  margin-top: 90px;
+}
+
+.auth-login-logo {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  pointer-events: none;
+  padding-bottom: 16px;
+}
+.auth-login-logo img {
+  max-height: 70px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 2px 12px rgba(50,21,74,0.10));
+}
+
+.auth-login-content .auth-header {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .auth-login-logo img {
+    max-height: 48px;
+  }
+  .auth-login-content .auth-main .auth-wrapper .auth-form .card {
+    margin-top: 60px;
+  }
+}

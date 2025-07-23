@@ -3,7 +3,10 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { environment } from '../../environments/environment';
+import { environment } from '../../../environments/environment';
+
+// Models
+import { User } from '../models/user.model';
 
 export interface LoginRequest {
   email: string;
@@ -16,13 +19,7 @@ export interface LoginResponse {
   message: string;
 }
 
-export interface User {
-  id: number;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  role?: string;
-}
+// Using shared User model from src/app/core/models/user.model
 
 @Injectable({
   providedIn: 'root'
@@ -73,7 +70,7 @@ export class AuthService {
     this.isAuthenticatedSubject.next(false);
     
     // Navigate to login
-    this.router.navigate(['/login']);
+    // this.router.navigate(['/login']);
   }
 
   /**
@@ -194,17 +191,23 @@ export class AuthService {
   private decodeToken(token: string): User | null {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      console.log('JWT Payload:', payload); // Debug: Log the entire payload
+      console.log('JWT Payload:', payload);
       
-      const user = {
+      const user: User = {
         id: payload.id,
         email: payload.email,
-        firstName: payload.firstname,
-        lastName: payload.lastname,
-        role: payload.role
+        firstName: payload.firstName || '',
+        lastName: payload.lastName || '',
+        name: `${payload.firstName || ''} ${payload.lastName || ''}`.trim(),
+        jobTitle: payload.jobTitle || 'Employee',
+        phone: payload.phone || '',
+        status: payload.status !== undefined ? payload.status : true,
+        role: payload.role || 'user',
+        company: payload.company || '',
+        salary: payload.salary || 0
       };
       
-      console.log('Decoded user object:', user); // Debug: Log the decoded user
+      console.log('Decoded user object:', user);
       return user;
     } catch (error) {
       console.error('Error decoding token:', error);

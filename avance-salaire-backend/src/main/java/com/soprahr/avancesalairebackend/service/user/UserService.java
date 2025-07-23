@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,7 +25,6 @@ public class UserService implements IUserService {
         if (user == null) return null;
         UserDTO dto = new UserDTO();
         dto.setId(user.getId());
-        dto.setEmployeeId(user.getEmployeeId());
         dto.setName(user.getName());
         dto.setLastName(user.getLastName());
         dto.setFirstName(user.getFirstName());
@@ -34,11 +34,11 @@ public class UserService implements IUserService {
         dto.setStatus(user.isStatus());
         dto.setRole(user.getRole());
         dto.setCompany(user.getCompany());
+        dto.setSalary(Optional.ofNullable(user.getSalary()).orElse(BigDecimal.ZERO));
         return dto;
     }
 
     private void updateEntityFromDTO(User user, UserDTO dto) {
-        user.setEmployeeId(dto.getEmployeeId());
         user.setName(dto.getName());
         user.setLastName(dto.getLastName());
         user.setFirstName(dto.getFirstName());
@@ -48,6 +48,7 @@ public class UserService implements IUserService {
         user.setStatus(dto.isStatus());
         user.setRole(dto.getRole());
         user.setCompany(dto.getCompany());
+        user.setSalary(dto.getSalary() != null ? dto.getSalary() : BigDecimal.ZERO);
     }
 
     @Override

@@ -1,0 +1,216 @@
+// Modern details card inspired by advance-request-form
+.request-details-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.details-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(80, 80, 120, 0.08);
+  border: 1.5px solid #ececec;
+  padding: 2rem 2.5rem 1.5rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.status-pending {
+  border-left: 6px solid #fbbf24;
+  background: linear-gradient(90deg, #fffbe6 0%, #fff7cc 100%);
+}
+.status-approved {
+  border-left: 6px solid #22c55e;
+  background: linear-gradient(90deg, #e6fff2 0%, #ccffe0 100%);
+}
+.status-rejected {
+  border-left: 6px solid #ef4444;
+  background: linear-gradient(90deg, #ffe6e6 0%, #ffd6d6 100%);
+}
+.status-other {
+  border-left: 6px solid #a728a7;
+  background: linear-gradient(90deg, #f3e6ff 0%, #f7e6ff 100%);
+}
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+}
+.employee-info {
+  flex: 1;
+}
+.employee-info .name {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 0.2rem;
+}
+.employee-info .meta {
+  color: #6b7280;
+  font-size: 0.98rem;
+  margin-bottom: 0.1rem;
+}
+.status-block {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #fff;
+  background: #a728a7;
+  border-radius: 8px;
+  padding: 0.5rem 1.2rem;
+  box-shadow: 0 2px 8px rgba(167,40,167,0.08);
+}
+.status-label {
+  color: #fff;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(80,80,120,0.08);
+}
+.request-info, .ceiling-info {
+  display: flex;
+  gap: 2.5rem;
+  flex-wrap: wrap;
+  font-size: 1.05rem;
+  color: #444;
+}
+.request-info > div, .ceiling-info > div {
+  min-width: 180px;
+  margin-bottom: 0.2rem;
+}
+.actions-row {
+  display: flex;
+  gap: 1.2rem;
+  margin-top: 1.5rem;
+  justify-content: flex-end;
+}
+.btn {
+  padding: 0.7rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-primary {
+  background: linear-gradient(90deg, #800fb6 0%, #a728a7 100%);
+  color: #fff;
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.btn-secondary {
+  background: #6c757d;
+  color: #fff;
+}
+.btn-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.back-row {
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+.btn-outline {
+  background: transparent;
+  color: #a728a7;
+  border: 1.5px solid #a728a7;
+  box-shadow: none;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-outline:hover {
+  background: #a728a7;
+  color: #fff;
+}
+.timeline {
+  margin-top: 1.5rem;
+  border-left: 3px solid #ececec;
+  padding-left: 2.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+.timeline-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  position: relative;
+}
+.timeline-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  position: absolute;
+  left: -2.7rem;
+  top: 0;
+  background: #fff;
+  border: 2.5px solid #ececec;
+  color: #a728a7;
+  box-shadow: 0 1px 4px rgba(80,80,120,0.06);
+}
+.timeline-icon.approved {
+  border-color: #22c55e;
+  color: #22c55e;
+  background: #e6fff2;
+}
+.timeline-icon.rejected {
+  border-color: #ef4444;
+  color: #ef4444;
+  background: #ffe6e6;
+}
+.timeline-icon.pending {
+  border-color: #fbbf24;
+  color: #fbbf24;
+  background: #fffbe6;
+}
+.timeline-content {
+  flex: 1;
+  min-width: 0;
+}
+.timeline-date {
+  font-size: 0.95rem;
+  color: #888;
+  margin-bottom: 0.1rem;
+}
+.timeline-status {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #333;
+}
+.timeline-comment {
+  font-size: 0.98rem;
+  color: #6b7280;
+  margin-top: 0.1rem;
+}
+@media (max-width: 900px) {
+  .details-card {
+    padding: 1.2rem 0.7rem;
+  }
+  .header-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .request-info, .ceiling-info {
+    gap: 1rem;
+    font-size: 0.98rem;
+  }
+  .timeline {
+    padding-left: 1.2rem;
+  }
+  .timeline-icon {
+    left: -1.7rem;
+    width: 1.7rem;
+    height: 1.7rem;
+    font-size: 1.05rem;
+  }
+}

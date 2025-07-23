@@ -1,2 +1,4 @@
-package com.soprahr.avancesalairebackend.service.notification;public interface INotificationService {
+package com.soprahr.avancesalairebackend.service.notification;
+
+public interface INotificationService {
 }

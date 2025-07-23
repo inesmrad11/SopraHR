@@ -1,0 +1,87 @@
+<div class="sopra-activity-timeline">
+  <!-- Header with title only -->
+  <div class="timeline-header">
+    <h3 class="timeline-title">
+      <i class="material-icons">timeline</i>
+      Suivi de votre demande d'avance sur salaire
+    </h3>
+  </div>
+
+  <!-- Progress bar -->
+  <div class="timeline-progress-container">
+    <div class="progress-info">
+      <span class="progress-label">Progression</span>
+      <span class="progress-text">{{ getCompletionPercentage() }}% terminé</span>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar" [style.width.%]="getCompletionPercentage()"></div>
+      <div class="progress-glow" [style.width.%]="getCompletionPercentage()"></div>
+    </div>
+  </div>
+
+  <!-- Status legend -->
+  <div class="status-legend">
+    <div class="legend-item"><div class="legend-dot completed"></div><span>Terminé</span></div>
+    <div class="legend-item"><div class="legend-dot in-progress"></div><span>En cours</span></div>
+    <div class="legend-item"><div class="legend-dot pending"></div><span>En attente</span></div>
+  </div>
+
+  <!-- Simple horizontal timeline with animated steps and tooltips -->
+  <div class="simple-timeline">
+    <div class="timeline-line"></div>
+    <div class="timeline-steps">
+      <div *ngFor="let activity of activities; let i = index" class="timeline-step"
+           [class.completed]="isStepCompleted(i)"
+           [class.active]="isStepActive(i)"
+           [class.pending]="isStepPending(i)"
+           [style.left.%]="(activities.length > 1 ? (i / (activities.length - 1)) * 100 : 0)"
+           (mouseenter)="hoveredStep = i" (mouseleave)="hoveredStep = null">
+        <div class="step-circle">
+          <i class="material-icons">{{ getIcon(activity.type) }}</i>
+          <div class="completion-check" *ngIf="isStepCompleted(i)"><i class="material-icons">check</i></div>
+        </div>
+        <div class="step-label">
+          <span class="actor">{{ activity.actor }}</span>
+          <span *ngIf="activity.actorRole" class="role">({{ activity.actorRole }})</span>
+        </div>
+        <!-- Tooltip/Popover -->
+        <div class="step-tooltip" *ngIf="hoveredStep === i">
+          <div class="tooltip-content">
+            <div><b>{{ activity.actor }}</b> <span *ngIf="activity.actorRole">({{ activity.actorRole }})</span></div>
+            <div>{{ getActionLabel(activity.type) }}</div>
+            <div *ngIf="activity.status">
+              <span class="status-label">Statut:</span>
+              <span class="status-value" [ngClass]="getStatusClass(activity.status)">
+                <i class="material-icons status-icon">{{ getStatusIcon(activity.status) }}</i>
+                {{ getStatusLabel(activity.status) }}
+              </span>
+            </div>
+            <div *ngIf="activity.comment" class="timeline-comment">
+              <i class="material-icons comment-icon">format_quote</i>
+              <span class="comment-text">"{{ activity.comment }}"</span>
+            </div>
+            <div *ngIf="activity.details" class="timeline-details">
+              <i class="material-icons details-icon">info</i>
+              <span>{{ activity.details }}</span>
+            </div>
+            <div class="timeline-timestamp">
+              <i class="material-icons time-icon">access_time</i>
+              <span class="timestamp">{{ activity.timestamp | date:'dd/MM/yyyy à HH:mm' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="timeline-summary">
+    <div class="summary-card">
+      <h4>Résumé de la demande</h4>
+      <div class="summary-stats">
+        <div class="stat-item"><span class="stat-number">{{ activities.length }}</span><span class="stat-label">Étapes totales</span></div>
+        <div class="stat-item"><span class="stat-number">{{ getCompletedStepsCount() }}</span><span class="stat-label">Étapes terminées</span></div>
+        <div class="stat-item"><span class="stat-number">{{ getRemainingStepsCount() }}</span><span class="stat-label">Étapes restantes</span></div>
+      </div>
+    </div>
+  </div>
+</div> 

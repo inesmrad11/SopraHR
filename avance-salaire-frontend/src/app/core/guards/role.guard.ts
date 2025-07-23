@@ -15,7 +15,7 @@ export const RoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const currentUser = authService.getCurrentUser();
   
   if (!currentUser || !currentUser.role) {
-    router.navigate(['/login']);
+    // router.navigate(['/login']);
     return false;
   }
 
@@ -23,7 +23,7 @@ export const RoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   
   if (!hasRequiredRole) {
     // Redirect to appropriate dashboard based on user role
-    if (currentUser.role === 'ADMIN' || currentUser.role === 'HR') {
+    if (currentUser.role === 'ADMIN' || currentUser.role === 'HR_EXPERT') {
       router.navigate(['/hr/dashboard']);
     } else {
       router.navigate(['/employee/dashboard']);

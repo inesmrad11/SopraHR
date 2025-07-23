@@ -56,7 +56,9 @@ public class JwtService {
             extraClaims.put("lastName", user.getLastName());
             extraClaims.put("email", user.getEmail());
             extraClaims.put("role", user.getRole().name());
+            extraClaims.put("salary", user.getSalary()); // Add salary to JWT payload
         }
+        System.out.println("JWT extraClaims: " + extraClaims); // Debug output
 
         return Jwts
                 .builder()

@@ -16,11 +16,14 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+
 @Entity
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "salary_advance_request")
 public class SalaryAdvanceRequest implements Serializable {
 
     @Id
@@ -63,6 +66,12 @@ public class SalaryAdvanceRequest implements Serializable {
     @JoinColumn(name = "approved_by")
     @JsonIgnore
     private User approvedBy;
+
+    @OneToMany(mappedBy = "salaryAdvanceRequest", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RepaymentSchedule> repaymentSchedules;
+
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<RequestHistory> history;
 
     @PrePersist
     protected void onCreate() {

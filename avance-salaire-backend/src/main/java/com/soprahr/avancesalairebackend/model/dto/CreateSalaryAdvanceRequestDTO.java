@@ -19,4 +19,7 @@ public class CreateSalaryAdvanceRequestDTO {
 
     @NotNull
     private LocalDate neededDate;
+
+    @NotNull
+    private Integer repaymentMonths;
 }

@@ -1,0 +1,301 @@
+<div class="welcome-banner" [ngStyle]="{'background-image': 'url(' + welcomeImage + ')'}">
+  <div class="welcome-banner-overlay"></div>
+  <div class="welcome-banner-content">
+    <div class="welcome-banner-text">
+      <div class="welcome-date">{{ frenchDate }}</div>
+      <div class="welcome-greeting">Bonjour, <b>{{ userFirstName }} {{ userLastName }}</b></div>
+    </div>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-md-6 col-xl-2 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <div class="text-muted">Salaire net</div>
+      <div class="fw-bold fs-4">{{ dashboardStats.salary | number:'1.0-0' }} TND</div>
+    </app-card>
+  </div>
+  <div class="col-md-6 col-xl-2 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <div class="text-muted">Plafond autorisé</div>
+      <div class="fw-bold fs-4">{{ dashboardStats.plafond | number:'1.0-0' }} TND</div>
+    </app-card>
+  </div>
+  <div class="col-md-6 col-xl-2 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <div class="text-muted">Cumul avances en cours</div>
+      <div class="fw-bold fs-4">{{ dashboardStats.totalNonRembourse | number:'1.0-0' }} TND</div>
+    </app-card>
+  </div>
+  <div class="col-md-6 col-xl-2 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <div class="text-muted">Marge restante</div>
+      <div class="fw-bold fs-4">
+        {{ dashboardStats.plafondDisponible | number:'1.0-0' }} TND
+        <span *ngIf="dashboardStats.plafondDisponible < dashboardStats.salary" class="badge bg-warning ms-2">Attention : marge faible</span>
+        <span *ngIf="dashboardStats.plafondDisponible <= 0" class="badge bg-danger ms-2">Plafond atteint</span>
+      </div>
+    </app-card>
+  </div>
+  <div class="col-md-6 col-xl-2 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <div class="text-muted">Progression remboursement</div>
+      <div class="fw-bold fs-4">
+        {{ globalRepaymentProgress }} %
+        <span *ngIf="globalRepaymentProgress === 100" class="badge bg-success ms-2">Bravo !</span>
+      </div>
+    </app-card>
+  </div>
+  <div class="col-md-6 col-xl-2 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <div class="text-muted">Santé financière</div>
+      <div class="fw-bold fs-4">
+        <span class="badge bg-{{ financialHealthColor }} fs-5">{{ financialHealthScore }} / 100</span>
+        <span class="d-block mt-1 text-{{ financialHealthColor }}">{{ financialHealthLabel }}</span>
+      </div>
+    </app-card>
+  </div>
+</div>
+<div *ngIf="dashboardStats.plafondDisponible <= 0" class="alert alert-danger d-flex align-items-center mb-3" role="alert">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  <div>Vous avez atteint le <strong>plafond autorisé</strong> d'avances. Veuillez rembourser avant de faire une nouvelle demande.</div>
+</div>
+<div *ngIf="dashboardStats.plafondDisponible > 0 && dashboardStats.plafondDisponible < dashboardStats.salary" class="alert alert-warning d-flex align-items-center mb-3" role="alert">
+  <i class="bi bi-exclamation-circle me-2"></i>
+  <div>Attention : votre <strong>marge restante</strong> est faible. Vous approchez du plafond autorisé.</div>
+</div>
+<div *ngIf="globalRepaymentProgress === 100 && dashboardStats.totalNonRembourse === 0" class="alert alert-success d-flex align-items-center mb-3" role="alert">
+  <i class="bi bi-check-circle-fill me-2"></i>
+  <div>Félicitations ! Toutes vos avances sont totalement remboursées.</div>
+</div>
+<div class="row mb-4">
+  <div class="col-12 col-md-6 col-xl-4 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <h6 class="mb-2 text-muted">Marge utilisée vs Marge restante</h6>
+      <apx-chart
+        [series]="donutChartSeries"
+        [chart]="donutChartOptions.chart"
+        [labels]="donutChartOptions.labels"
+        [colors]="donutChartOptions.colors"
+        [legend]="donutChartOptions.legend"
+        [dataLabels]="donutChartOptions.dataLabels"
+        [tooltip]="donutChartOptions.tooltip"
+        style="width:100%; min-height:220px;"
+      ></apx-chart>
+    </app-card>
+  </div>
+  <div class="col-12 col-md-6 col-xl-4 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <h6 class="mb-2 text-muted">Répartition des statuts de mes demandes</h6>
+      <apx-chart
+        [series]="pieChartSeries"
+        [chart]="pieChartOptions.chart"
+        [labels]="pieChartOptions.labels"
+        [colors]="pieChartOptions.colors"
+        [legend]="pieChartOptions.legend"
+        [dataLabels]="pieChartOptions.dataLabels"
+        [tooltip]="pieChartOptions.tooltip"
+        style="width:100%; min-height:220px;"
+      ></apx-chart>
+    </app-card>
+  </div>
+  <div class="col-12 col-md-6 col-xl-4 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <h6 class="mb-2 text-muted">Répartition des motifs d'avance</h6>
+      <apx-chart
+        [series]="reasonPieChartSeries"
+        [chart]="reasonPieChartOptions.chart"
+        [labels]="reasonPieChartOptions.labels"
+        [colors]="reasonPieChartOptions.colors"
+        [legend]="reasonPieChartOptions.legend"
+        [dataLabels]="reasonPieChartOptions.dataLabels"
+        [tooltip]="reasonPieChartOptions.tooltip"
+        style="width:100%; min-height:220px;"
+      ></apx-chart>
+    </app-card>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-12 col-xl-8 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card">
+      <h6 class="mb-2 text-muted">Évolution du cumul des avances non remboursées</h6>
+      <apx-chart
+        [series]="cumulativeChartSeries"
+        [chart]="cumulativeChartOptions.chart"
+        [colors]="cumulativeChartOptions.colors"
+        [dataLabels]="cumulativeChartOptions.dataLabels"
+        [stroke]="cumulativeChartOptions.stroke"
+        [xaxis]="cumulativeChartOptions.xaxis"
+        [yaxis]="cumulativeChartOptions.yaxis"
+        [grid]="cumulativeChartOptions.grid"
+        [tooltip]="cumulativeChartOptions.tooltip"
+        style="width:100%; min-height:250px;"
+      ></apx-chart>
+    </app-card>
+  </div>
+  <div class="col-12 col-xl-8 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card">
+      <h6 class="mb-2 text-muted">% du salaire remboursé chaque mois</h6>
+      <apx-chart
+        [series]="salaryRepaymentChartSeries"
+        [chart]="salaryRepaymentChartOptions.chart"
+        [colors]="salaryRepaymentChartOptions.colors"
+        [dataLabels]="salaryRepaymentChartOptions.dataLabels"
+        [xaxis]="salaryRepaymentChartOptions.xaxis"
+        [yaxis]="salaryRepaymentChartOptions.yaxis"
+        [grid]="salaryRepaymentChartOptions.grid"
+        [tooltip]="salaryRepaymentChartOptions.tooltip"
+        style="width:100%; min-height:250px;"
+      ></apx-chart>
+    </app-card>
+  </div>
+  <div class="col-12 col-xl-4 mb-3">
+    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
+      <h6 class="mb-2 text-muted">Prévision retour à zéro</h6>
+      <div class="fs-5 fw-bold">
+        <ng-container *ngIf="predictedZeroDate; else noZero">
+          {{ predictedZeroDate | date:'longDate' }}
+        </ng-container>
+        <ng-template #noZero>
+          <span class="text-muted">Aucune avance en cours</span>
+        </ng-template>
+      </div>
+    </app-card>
+  </div>
+</div>
+<div class="row mb-4">
+  <div class="col-12">
+    <app-card [showHeader]="false" blockClass="dashboard-card">
+      <h6 class="mb-2 text-muted">Timeline de remboursement (Gantt simplifié)</h6>
+      <div class="gantt-timeline">
+        <div *ngIf="!ganttData.length" class="text-muted">Aucune avance en cours</div>
+        <div *ngFor="let avance of ganttData" class="gantt-row mb-2">
+          <div class="fw-bold mb-1">#{{ avance.id }} - {{ avance.reason }}</div>
+          <div class="gantt-bar d-flex align-items-center">
+            <div *ngFor="let sched of avance.schedule" class="gantt-segment me-1" [ngClass]="sched.paid ? 'gantt-paid' : 'gantt-unpaid'" [title]="sched.dueDate | date:'MMM yyyy'">
+              <span class="d-block small">{{ sched.dueDate | date:'MMM' }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </app-card>
+  </div>
+</div>
+<div class="row">
+    @for (analytic of AnalyticEcommerce; track analytic) {
+      <div class="col-md-6 col-xl-3">
+        <app-card [showHeader]="false" blockClass="dashboard-card">
+          <h6 class="mb-2 f-w-400 text-muted">{{ analytic.title }}</h6>
+          <h4 class="mb-3">
+            {{ analytic.amount }}
+            <span class="badge {{ analytic.background }} border {{ analytic.border }} ">
+              <i antIcon type="{{ analytic.icon }}" theme="outline"></i>
+              {{ analytic.percentage }}
+            </span>
+          </h4>
+          <p class="mb-0 text-muted text-sm">
+            You made an extra
+            <span class="{{ analytic.color }}">{{ analytic.number }}</span>
+            this year
+          </p>
+        </app-card>
+      </div>
+    }
+    <div class="col-md-12 col-xl-8">
+      <app-monthly-bar-chart [series]="monthlyChartSeries" [categories]="monthlyChartCategories" />
+    </div>
+    <div class="col-md-12 col-xl-4">
+      <app-income-overview-chart [series]="incomeChartSeries" [categories]="incomeChartCategories" />
+    </div>
+  
+    <div class="col-md-12 col-xl-8">
+      <h5 class="mb-3">Mes dernières demandes d'avance</h5>
+      <div class="card tbl-card">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>TRACKING NO.</th>
+                <th>PRODUCT NAME</th>
+                <th>STATUS</th>
+                <th class="text-end">TOTAL ORDER</th>
+                <th class="text-end">TOTAL AMOUNT</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (order of recentOrder; track order) {
+                <tr>
+                  <td>
+                    <a href="javascript:" class="text-muted">{{ order.id }}</a>
+                  </td>
+                  <td>{{ order.name }}</td>
+                  <td>
+                    <span class="d-block">
+                      <i class="badge-circle {{ order.status_type }} f-10 m-r-5"></i>
+                      {{ order.status }}
+                    </span>
+                  </td>
+                  <td class="text-end">{{ order.quantity }}</td>
+                  <td class="text-end">{{ order.amount }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-12 col-xl-4">
+      <app-analytics-chart />
+    </div>
+  
+    <div class="col-md-12 col-xl-8">
+      <app-sales-report-chart />
+    </div>
+    <div class="col-md-12 col-xl-4">
+      <h5 class="mb-3">Historique de mes transactions</h5>
+      <div class="card">
+        <div class="list-group list-group-flush">
+          @for (history of transaction; track history) {
+            <a href="javascript:" class="list-group-item list-group-item-action px-3">
+              <div class="d-flex">
+                <div class="flex-shrink-0">
+                  <div class="avatar avatar-s rounded-circle {{ history.background }}">
+                    <i class="f-16" antIcon type="{{ history.icon }}" theme="outline"></i>
+                  </div>
+                </div>
+                <div class="flex-grow-1 ms-3">
+                  <h6 class="mb-1">{{ history.title }}</h6>
+                  <p class="mb-0 text-muted">{{ history.time }}</p>
+                </div>
+                <div class="flex-shrink-0 text-end">
+                  <h6 class="mb-1">{{ history.amount }}</h6>
+                  <p class="mb-0 text-muted">{{ history.percentage }}</p>
+                </div>
+              </div>
+            </a>
+          }
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div class="row justify-content-between">
+            <div class="col-auto">
+              <h5>Help & Support Chat</h5>
+              <p class="mb-3">Typical replay within 5 min</p>
+            </div>
+            <div class="col-auto">
+              <div class="user-group mb-3">
+                <img src="assets/images/user/avatar-1.jpg" alt="image" />
+                <img src="assets/images/user/avatar-2.jpg" alt="image" />
+                <img src="assets/images/user/avatar-3.jpg" alt="image" />
+              </div>
+            </div>
+          </div>
+          <div class="d-grid">
+            <div class="btn btn-primary">Need Help?</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- [ sample-page ] end -->
+  </div>
+  

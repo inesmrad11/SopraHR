@@ -1,0 +1,78 @@
+<div class="card shadow rounded-4">
+  <div class="card-header bg-white border-bottom-0 pb-0">
+    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
+      <!-- Titre retiré d'ici -->
+      <div class="search-bar-wrapper w-100 w-md-auto mt-3 mt-md-0">
+        <div class="search-bar">
+          <span class="search-icon">
+            <svg class="icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </span>
+          <input type="text" class="form-control search-input" placeholder="Rechercher une demande..." [(ngModel)]="searchTerm" (input)="onSearchChange($event)">
+        </div>
+      </div>
+    </div>
+  </div>
+  <div *ngIf="apiError" class="alert alert-danger text-center mt-3 mb-0">{{ apiError }}</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover table-striped align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th (click)="sort('requestedAmount')" class="sortable table-header-main">Montant demandé <span class="sort-arrow" [ngClass]="getSortClass('requestedAmount')"></span></th>
+            <th (click)="sort('status')" class="sortable table-header-main">Statut <span class="sort-arrow" [ngClass]="getSortClass('status')"></span></th>
+            <th (click)="sort('repaymentProgress')" class="sortable table-header-main">Remboursement <span class="sort-arrow" [ngClass]="getSortClass('repaymentProgress')"></span></th>
+            <th (click)="sort('requestDate')" class="sortable table-header-main">Date <span class="sort-arrow" [ngClass]="getSortClass('requestDate')"></span></th>
+            <th class="table-header-main">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let request of filteredRequests | slice:(currentPage-1)*itemsPerPage:(currentPage)*itemsPerPage">
+            <td>{{ request.requestedAmount?.toFixed(2) }} TND</td>
+            <td>
+              <span class="badge" [ngClass]="getStatusClass(request.status)">
+                {{ request.status }}
+              </span>
+            </td>
+            <td style="min-width: 120px;">
+              <div class="progress" style="height: 18px;">
+                <div class="progress-bar" role="progressbar"
+                  [ngClass]="request.isFullyPaid ? 'bg-success' : 'bg-secondary'"
+                  [style.width]="(request.repaymentProgress || 0) + '%'">
+                  {{ request.repaymentProgress != null ? request.repaymentProgress + '%' : '0%' }}
+                </div>
+              </div>
+            </td>
+            <td>{{ request.requestDate | date:'yyyy-MM-dd' }}</td>
+            <td>
+              <a [routerLink]="['/employee/advance-request-details', request.id]" class="btn btn-outline-primary btn-sm action-eye" title="Voir détails">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
+              </a>
+            </td>
+          </tr>
+          <tr *ngIf="filteredRequests.length === 0">
+            <td colspan="5" class="text-center py-4">
+              <div class="text-muted">Aucune demande trouvée</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white border-top-0">
+    <div class="text-muted small">
+      Affichage de {{ (currentPage - 1) * itemsPerPage + 1 }} à 
+      {{ currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage }} sur {{ totalItems }} entrées
+    </div>
+    <div class="custom-pagination d-flex align-items-center gap-2">
+      <button class="pagination-arrow" [disabled]="currentPage === 1" (click)="changePage(-1)">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <ng-container *ngFor="let page of totalPagesArray">
+        <button class="pagination-page" [class.active]="page === currentPage" (click)="goToPage(page)">{{ page }}</button>
+      </ng-container>
+      <button class="pagination-arrow" [disabled]="currentPage === totalPages" (click)="changePage(1)">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,151 @@
+<!-- Modern multi-step advance request form, Angular version of provided design -->
+<div class="container">
+  <div *ngIf="currentUser && userSalary > 0; else noSalaryBlock">
+    <div class="form-card">
+      <div class="form-header">
+        <h1>Demande d'avance sur salaire</h1>
+        <p>Veuillez remplir les informations ci-dessous pour soumettre votre demande</p>
+      </div>
+      <div class="stepper-container">
+        <div class="stepper-nav step-{{currentStep}}" id="stepperNav">
+          <div class="step-item" *ngFor="let step of steps; let i = index">
+            <div class="step-circle"
+                 [ngClass]="{'active': currentStep === i+1, 'completed': currentStep > i+1}">
+              {{ currentStep > i+1 ? '✓' : (i+1) }}
+            </div>
+            <div class="step-label" [ngClass]="{'active': currentStep === i+1}">{{ step }}</div>
+          </div>
+        </div>
+        <form [formGroup]="advanceForm" (ngSubmit)="onSubmit()" autocomplete="off">
+          <!-- Step 1: Amount -->
+          <div class="step-content" *ngIf="currentStep === 1">
+            <ng-container *ngIf="!hasPendingRequest && maxAdvanceAmount > 0; else plafondAtteintOrPendingBlock">
+            <div class="form-group">
+              <label for="requestedAmount" class="form-label">Montant demandé</label>
+              <div class="input-group">
+                  <input type="number" class="form-control" id="requestedAmount" formControlName="requestedAmount" placeholder="Entrez le montant souhaité" min="100" [max]="maxAdvanceAmount" step="0.01" [disabled]="maxAdvanceAmount <= 0">
+                <span class="input-group-text">TND</span>
+              </div>
+              <!-- Affichage du message d'erreur plafond ou validation -->
+              <div class="error-message" *ngIf="errorMessage && errorMessage.includes('plafond autorisé')">
+                {{ errorMessage }}
+              </div>
+              <div class="error-message" *ngIf="advanceForm.get('requestedAmount')?.invalid && (advanceForm.get('requestedAmount')?.touched || submitted) && !(errorMessage && errorMessage.includes('plafond autorisé'))">
+                {{ getErrorMessage('requestedAmount') }}
+              </div>
+                <div class="alert alert-info mt-2 plafond-gradient-info" *ngIf="userSalary > 0">
+                   Vous ne pouvez pas demander plus que <b>{{ maxAdvanceAmount | number:'1.2-2' }} TND</b> (plafond disponible)
+              </div>
+            </div>
+            <div class="btn-actions">
+              <div></div>
+                <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="advanceForm.get('requestedAmount')?.invalid || maxAdvanceAmount <= 0">Suivant <span>→</span></button>
+              </div>
+            </ng-container>
+            <ng-template #plafondAtteintOrPendingBlock>
+              <div *ngIf="hasPendingRequest" class="alert alert-warning mt-3 text-center p-4" style="font-size:1.1em;">
+                <div class="mb-2">
+                  <i class="bi bi-hourglass-split mb-2" style="font-size:2em; display:block;"></i>
+                  <div class="fw-bold" style="font-size:1.2em;">Demande en attente de traitement</div>
+                </div>
+                <div class="mt-2">
+                  Vous avez déjà une demande d’avance en cours de traitement.<br>
+                  <span class="fw-semibold">Veuillez attendre la décision (validation ou rejet) avant d’en soumettre une nouvelle.</span>
+                </div>
+              </div>
+              <div *ngIf="!hasPendingRequest && maxAdvanceAmount <= 0" class="alert alert-danger mt-3 text-center p-4" style="font-size:1.1em;">
+                <div class="mb-2">
+                  <i class="bi bi-x-octagon mb-2" style="font-size:2em; display:block;"></i>
+                  <div class="fw-bold" style="font-size:1.2em; color:#b30000;">Plafond d'avance atteint</div>
+                </div>
+                <div class="mt-2">
+                  <span class="fw-semibold">Vous ne pouvez plus demander d'avance tant que vos avances précédentes ne sont pas remboursées ou que votre plafond n'est pas reconstitué.</span>
+                </div>
+            </div>
+            </ng-template>
+          </div>
+          <!-- Step 2: Date -->
+          <div class="step-content" *ngIf="currentStep === 2">
+            <div class="form-group">
+              <label for="neededDate" class="form-label">Date souhaitée pour l'avance</label>
+              <input type="date" class="form-control" id="neededDate" formControlName="neededDate" [min]="minDate" [max]="maxDate">
+              <div class="error-message" *ngIf="advanceForm.get('neededDate')?.invalid && (advanceForm.get('neededDate')?.touched || submitted)">
+                La date doit être au moins 2 jours à partir d'aujourd'hui
+              </div>
+              <div class="info-message">La date doit être au moins 2 jours à partir d'aujourd'hui</div>
+            </div>
+            <div class="btn-actions">
+              <button type="button" class="btn btn-outline" (click)="previousStep()"><span>←</span> Précédent</button>
+              <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="advanceForm.get('neededDate')?.invalid">Suivant <span>→</span></button>
+            </div>
+          </div>
+          <!-- Step 3: Reason -->
+          <div class="step-content" *ngIf="currentStep === 3">
+            <div class="form-group">
+              <label for="reason" class="form-label">Raison de la demande</label>
+              <textarea class="form-control" id="reason" formControlName="reason" rows="4" maxlength="500" placeholder="Veuillez expliquer brièvement pourquoi vous avez besoin de cette avance..." (input)="updateCharacterCount()"></textarea>
+              <div class="character-count" [ngClass]="{'warning': reasonLength >= 450 && reasonLength < 490, 'danger': reasonLength >= 490}">{{ reasonLength }}/500</div>
+              <div class="error-message" *ngIf="advanceForm.get('reason')?.invalid && (advanceForm.get('reason')?.touched || submitted)">
+                Veuillez fournir une raison d'au moins 20 caractères
+              </div>
+            </div>
+            <div class="btn-actions">
+              <button type="button" class="btn btn-outline" (click)="previousStep()"><span>←</span> Précédent</button>
+              <button type="button" class="btn btn-primary" (click)="nextStep()" [disabled]="advanceForm.get('reason')?.invalid">Suivant <span>→</span></button>
+            </div>
+          </div>
+          <!-- Step 4: Repayment -->
+          <div class="step-content" *ngIf="currentStep === 4">
+            <div class="form-group">
+              <div class="range-container">
+                <div class="range-header">
+                  <label class="form-label">Période de remboursement</label>
+                  <div class="range-value"><span>{{ advanceForm.get('repaymentMonths')?.value }}</span> mois</div>
+                </div>
+                <input type="range"
+                  class="form-range"
+                  [min]="advanceForm.get('requestedAmount')?.value == maxAdvanceAmount ? 2 : 1"
+                  max="6"
+                  [step]="1"
+                  [value]="advanceForm.get('repaymentMonths')?.value"
+                  (input)="updateRepaymentMonths($any($event.target).value)"
+                >
+                <div class="form-text" *ngIf="advanceForm.get('requestedAmount')?.value == maxAdvanceAmount">
+                  <span class="text-warning">⚠ Le montant demandé atteint le plafond maximal. Vous devez sélectionner une durée de remboursement d’au moins 2 mois.</span>
+                </div>
+              </div>
+            </div>
+            <div class="payment-summary">
+              <div class="payment-row">
+                <span>Montant total</span>
+                <strong>{{ advanceForm.get('requestedAmount')?.value || 0 | number:'1.2-2' }} TND</strong>
+              </div>
+              <div class="payment-row">
+                <span>Nombre de mensualités</span>
+                <strong>{{ advanceForm.get('repaymentMonths')?.value }}</strong>
+              </div>
+              <div class="payment-row">
+                <span>Montant mensuel</span>
+                <strong>{{ monthlyPayment | number:'1.2-2' }} TND</strong>
+              </div>
+            </div>
+            <div *ngIf="successMessage" class="alert alert-success">✓ {{ successMessage }}</div>
+            <div *ngIf="errorMessage" class="alert alert-error">⚠ {{ errorMessage }}</div>
+            <div class="btn-actions">
+              <button type="button" class="btn btn-outline" (click)="previousStep()"><span>←</span> Précédent</button>
+              <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+                <span class="spinner" *ngIf="isLoading"></span>
+                Envoyer la demande
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <ng-template #noSalaryBlock>
+    <div class="alert alert-error">
+      Vous n'êtes pas autorisé à demander une avance car votre salaire est inexistant ou non renseigné.
+    </div>
+  </ng-template>
+</div>

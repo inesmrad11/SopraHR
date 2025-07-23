@@ -14,6 +14,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,10 +33,6 @@ public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @NotBlank(message = "Employee ID is mandatory")
-    @Column(unique = true)
-    private String employeeId;
 
     @NotBlank(message = "Name is mandatory")
     @Size(max = 100)
@@ -102,6 +99,18 @@ public class User implements UserDetails {
 
     @Size(max = 100)
     private String company;
+
+    @NotNull(message = "Salary is mandatory")
+    @DecimalMin(value = "0.0", inclusive = false, message = "Salary must be greater than 0")
+    @Column(name = "salary", nullable = false)
+    private BigDecimal salary;
+
+    @Column(name = "profile_picture")
+    private String profilePicture;
+
+    @OneToMany(mappedBy = "employee")
+    @JsonIgnore
+    private List<SalaryAdvanceRequest> requests;
 
     // ✅ Security methods
     @Override

@@ -1,0 +1,91 @@
+<div class="hr-requests-container">
+  <div class="filter-bar">
+    <input type="text" placeholder="Nom du salarié..." [(ngModel)]="filterName">
+    <select [(ngModel)]="filterStatus">
+      <option value="">Tous statuts</option>
+      <option *ngFor="let s of statusList" [value]="s">{{ getStatusLabel(s) }}</option>
+    </select>
+    <input type="date" [(ngModel)]="filterFrom">
+    <input type="date" [(ngModel)]="filterTo">
+  </div>
+
+  <div *ngIf="loading" class="loader">Chargement...</div>
+  <div *ngIf="error" class="alert alert-error">{{ error }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-error">{{ errorMessage }}</div>
+
+  <div class="cards-list">
+    <div *ngFor="let req of filteredRequests" class="request-card" [ngClass]="getStatusClass(req.status)">
+      <div class="card-header">
+        <span class="employee-name">{{ req.employeeFullName }}</span>
+        <span class="request-date">{{ req.requestDate | date:'shortDate' }}</span>
+      </div>
+      
+      <div class="card-body">
+        <div class="amount">
+          <span class="amount-label">Montant</span>
+          <span class="amount-value">{{ req.requestedAmount | number:'1.2-2' }} TND</span>
+        </div>
+        
+        <div class="duration">
+          <span class="duration-label">Durée</span>
+          <span class="duration-value">{{ req.repaymentMonths || '?' }} mois</span>
+        </div>
+        
+        <div class="status-row">
+          <span class="status-label">Statut</span>
+          <span class="status-value">
+            <span class="status-icon" [@statusPop]="isStatusChanged(req) ? req.status : null">{{ getStatusIcon(req.status) }}</span>
+            <span class="status-text">{{ getStatusLabel(req.status) }}</span>
+          </span>
+        </div>
+        
+        <div class="reviewer" *ngIf="req.approvedByFullName">
+          <span class="reviewer-label">RH :</span>
+          <span class="reviewer-value">{{ req.approvedByFullName }}</span>
+        </div>
+        
+        <div class="card-actions">
+          <button class="btn btn-outline" (click)="openDetails(req)">Voir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<app-validation-modal 
+  [visible]="modalVisible"
+  (confirm)="onModalConfirm($event)"
+  (cancel)="onModalCancel()">
+</app-validation-modal>
+
+<!-- MODAL DÉTAILS RH SIMPLIFIÉE -->
+<div class="modal-backdrop" *ngIf="selectedRequest" (click)="closeDetailsModal()">
+  <div class="modal-zoom modal-zoom-large modal-square" (click)="$event.stopPropagation()" style="max-width:340px;">
+    <span class="modal-close" (click)="closeDetailsModal()" aria-label="Fermer"></span>
+    <h3 style="text-align:center; margin-bottom:1.5rem;">Détail de la demande</h3>
+    <div class="modal-details-grid">
+      <div><b>Salarié :</b> {{ selectedRequest.employeeFullName }}</div>
+      <div><b>Date :</b> {{ selectedRequest.requestDate | date:'shortDate' }}</div>
+      <div><b>Montant :</b> {{ selectedRequest.requestedAmount | number:'1.2-2' }} TND</div>
+      <div><b>Durée :</b> {{ selectedRequest.repaymentMonths || '?' }} mois</div>
+      <div><b>Statut :</b> <span class="status-text-lower">{{ getStatusLabel(selectedRequest.status) }}</span></div>
+      <div style="grid-column: 1 / -1;"><b>Raison :</b> {{ selectedRequest.reason || '—' }}</div>
+      <div style="grid-column: 1 / -1; margin-top:0.7rem; background:#f8f9fa; border-radius:6px; padding:0.5rem 0.7rem; font-size:0.85em; line-height:1.5; max-width:340px;">
+        <div><b>Salaire net :</b> {{ selectedRequest.employeeSalaryNet | number:'1.2-2' }} TND</div>
+        <div><b>Plafond disponible :</b> {{ selectedRequest.plafondDisponible | number:'1.2-2' }} TND</div>
+        <div><b>Avances non remboursées :</b> {{ selectedRequest.totalAvancesNonRemboursees | number:'1.2-2' }} TND</div>
+      </div>
+    </div>
+    <textarea [(ngModel)]="modalComment" placeholder="Commentaire (optionnel)" rows="3" style="width:100%;margin:1.2rem 0;"></textarea>
+    <div *ngIf="modalError" class="alert alert-error">{{ modalError }}</div>
+    <div class="modal-actions modal-actions-center">
+      <button class="btn btn-validate-outline" (click)="approveSelectedRequest()" [disabled]="modalLoading">
+        <span *ngIf="modalLoading" class="spinner"></span> Valider
+      </button>
+      <button class="btn btn-gradient" (click)="rejectSelectedRequest()" [disabled]="modalLoading">
+        <span *ngIf="modalLoading" class="spinner"></span> Rejeter
+      </button>
+    </div>
+  </div>
+</div>

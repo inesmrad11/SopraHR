@@ -28,16 +28,14 @@ public class Notification {
     private NotificationType type;
 
     @Column(name = "is_read")
-    private boolean read;
+    private boolean read = false;
 
     private LocalDateTime createdAt;
 
-    // ✅ Link to the user who receives the notification
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User recipient;
 
-    // ✅ Optional link to a related request
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "request_id")
     private SalaryAdvanceRequest relatedRequest;

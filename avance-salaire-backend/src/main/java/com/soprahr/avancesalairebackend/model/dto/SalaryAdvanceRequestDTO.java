@@ -21,4 +21,8 @@ public class SalaryAdvanceRequestDTO {
     private LocalDateTime updatedAt;
     private String employeeFullName;
     private String approvedByFullName;
+    private Integer repaymentProgress;
+    private BigDecimal employeeSalaryNet;
+    private BigDecimal plafondDisponible;
+    private BigDecimal totalAvancesNonRemboursees;
 }
