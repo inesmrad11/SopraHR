@@ -37,6 +37,9 @@ import com.lowagie.text.pdf.PdfWriter;
 import java.io.ByteArrayOutputStream;
 import com.soprahr.avancesalairebackend.model.dto.RequestHistoryItemDTO;
 import org.apache.poi.ss.usermodel.Row;
+import com.soprahr.avancesalairebackend.service.notification.NotificationService;
+import com.soprahr.avancesalairebackend.model.enums.NotificationType;
+import com.soprahr.avancesalairebackend.model.dto.RequestStepDTO;
 
 @Service
 @Transactional
@@ -48,6 +51,7 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
     private final RequestHistoryRepository requestHistoryRepository;
     @org.springframework.beans.factory.annotation.Autowired
     private com.soprahr.avancesalairebackend.repository.RepaymentScheduleRepository repaymentScheduleRepository;
+    private final NotificationService notificationService;
 
     @Override
     public SalaryAdvanceRequestDTO createRequest(CreateSalaryAdvanceRequestDTO dto) {
@@ -117,6 +121,9 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
         int months = dto.getRepaymentMonths();
         entity.setRepaymentSchedules(generateRepaymentSchedules(entity, months));
         entity = salaryAdvanceRequestRepository.save(entity);
+        // Add initial history entry for submission
+        entity.setApprovedBy(employee); // For saveHistory to set changedBy
+        saveHistory(entity, null, RequestStatus.PENDING, "Demande soumise par l'employé");
         return toDTO(entity);
     }
 
@@ -190,6 +197,8 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
             salaryAdvanceRequestRepository.save(request);
             // Historique
             saveHistory(request, RequestStatus.PENDING, RequestStatus.REJECTED, "Rejet automatique : plafond dépassé");
+            // Notify employee of rejection
+            notificationService.createAndSendNotification(employee, "Demande rejetée", "Votre demande d'avance a été rejetée car le montant dépasse le plafond autorisé.", NotificationType.REQUEST_REJECTION, request);
             throw new IllegalArgumentException("Le montant demandé dépasse le plafond autorisé (" + plafondDisponible + " TND restants).");
         }
         // Validation
@@ -220,6 +229,8 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
         salaryAdvanceRequestRepository.save(request);
         // Historique
         saveHistory(request, RequestStatus.PENDING, RequestStatus.APPROVED, "Validation RH");
+        // Notify employee of approval
+        notificationService.createAndSendNotification(employee, "Demande approuvée", "Votre demande d'avance a été approuvée. Les fonds seront bientôt disponibles.", NotificationType.REQUEST_APPROVAL, request);
     }
 
     @Override
@@ -244,6 +255,8 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
         salaryAdvanceRequestRepository.save(request);
         // Historique
         saveHistory(request, RequestStatus.PENDING, RequestStatus.REJECTED, reason);
+        // Notify employee of rejection
+        notificationService.createAndSendNotification(request.getEmployee(), "Demande rejetée", "Votre demande d'avance a été rejetée. Motif : " + reason, NotificationType.REQUEST_REJECTION, request);
     }
 
     @Override
@@ -288,6 +301,9 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
         if (entity.getEmployee() != null) {
             dto.setEmployeeFullName(entity.getEmployee().getFirstName() + " " + entity.getEmployee().getLastName());
             dto.setEmployeeSalaryNet(entity.getEmployee().getSalary());
+            dto.setEmployeeId(entity.getEmployee().getId());
+            dto.setEmployeeEmail(entity.getEmployee().getEmail());
+            dto.setEmployeeProfilePicture(entity.getEmployee().getProfilePicture());
             // Calcul du plafond global (pour l'affichage dashboard)
             java.math.BigDecimal plafond = entity.getEmployee().getSalary().multiply(java.math.BigDecimal.valueOf(2));
             java.math.BigDecimal totalNonRembourse = java.math.BigDecimal.ZERO;
@@ -314,8 +330,11 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
                 .map(com.soprahr.avancesalairebackend.model.entity.RepaymentSchedule::getAmount)
                 .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
             dto.setTotalAvancesNonRemboursees(reste);
+            // Calculate repayment months from schedules
+            dto.setRepaymentMonths(entity.getRepaymentSchedules().size());
         } else {
             dto.setTotalAvancesNonRemboursees(java.math.BigDecimal.ZERO);
+            dto.setRepaymentMonths(0);
         }
         if (entity.getApprovedBy() != null)
             dto.setApprovedByFullName(entity.getApprovedBy().getFirstName() + " " + entity.getApprovedBy().getLastName());
@@ -359,9 +378,12 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
     }
 
     private void saveHistory(SalaryAdvanceRequest request, RequestStatus prev, RequestStatus next, String comment) {
+        // Si prev est null (nouvelle demande), utiliser PENDING comme statut précédent
+        RequestStatus previousStatus = prev != null ? prev : RequestStatus.PENDING;
+        
         RequestHistory history = RequestHistory.builder()
                 .request(request)
-                .previousStatus(prev)
+                .previousStatus(previousStatus)
                 .newStatus(next)
                 .changedBy(request.getApprovedBy())
                 .comment(comment)
@@ -544,5 +566,66 @@ public class SalaryAdvanceRequestService implements ISalaryAdvanceRequestService
         } catch (Exception e) {
             throw new RuntimeException("Failed to export history to PDF", e);
         }
+    }
+
+    public List<RequestStepDTO> getRequestSteps(Long id) {
+        List<RequestStepDTO> steps = new ArrayList<>();
+        SalaryAdvanceRequest request = salaryAdvanceRequestRepository.findById(id).orElse(null);
+        if (request == null) return steps;
+
+        // 1. Soumission (toujours validée)
+        RequestStepDTO submission = new RequestStepDTO();
+        submission.setType("SUBMISSION");
+        submission.setStatus("Validée");
+        submission.setActor(request.getEmployee() != null ? request.getEmployee().getFirstName() + " " + request.getEmployee().getLastName() : "Employé");
+        submission.setActorRole("Employé");
+        submission.setTimestamp(request.getCreatedAt());
+        submission.setComment(request.getReason());
+        steps.add(submission);
+
+        // 2. Validation RH
+        RequestStepDTO validation = new RequestStepDTO();
+        validation.setType("VALIDATION");
+        validation.setActor(request.getApprovedBy() != null ? request.getApprovedBy().getFirstName() + " " + request.getApprovedBy().getLastName() : "RH");
+        validation.setActorRole("RH");
+        // Chercher l'historique de validation/rejet
+        RequestHistory rhHistory = null;
+        if (request.getHistory() != null) {
+            for (RequestHistory h : request.getHistory()) {
+                if (h.getNewStatus() == com.soprahr.avancesalairebackend.model.enums.RequestStatus.APPROVED || h.getNewStatus() == com.soprahr.avancesalairebackend.model.enums.RequestStatus.REJECTED) {
+                    rhHistory = h;
+                    break;
+                }
+            }
+        }
+        if (request.getStatus() == com.soprahr.avancesalairebackend.model.enums.RequestStatus.PENDING) {
+            validation.setStatus("En attente");
+        } else if (request.getStatus() == com.soprahr.avancesalairebackend.model.enums.RequestStatus.APPROVED) {
+            validation.setStatus("Validée");
+        } else if (request.getStatus() == com.soprahr.avancesalairebackend.model.enums.RequestStatus.REJECTED) {
+            validation.setStatus("Rejetée");
+        }
+        validation.setTimestamp(rhHistory != null ? rhHistory.getChangedAt() : null);
+        validation.setComment(rhHistory != null ? rhHistory.getComment() : null);
+        steps.add(validation);
+
+        // 3. Système (Clôture)
+        RequestStepDTO closure = new RequestStepDTO();
+        closure.setType("CLOSURE");
+        closure.setActor("Système");
+        closure.setTimestamp(request.getUpdatedAt());
+        if ("Validée".equals(validation.getStatus())) {
+            closure.setStatus("Clôturée");
+            closure.setDetails("Demande clôturée après validation RH.");
+        } else if ("Rejetée".equals(validation.getStatus())) {
+            closure.setStatus("Rejetée");
+            closure.setDetails("Demande clôturée après rejet RH.");
+        } else {
+            closure.setStatus("En attente");
+            closure.setDetails("");
+        }
+        steps.add(closure);
+
+        return steps;
     }
 }

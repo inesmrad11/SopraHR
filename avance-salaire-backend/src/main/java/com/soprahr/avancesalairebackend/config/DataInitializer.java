@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Configuration
 public class DataInitializer {
@@ -38,14 +39,6 @@ public class DataInitializer {
         return args -> {
             if (userRepository.findAll().isEmpty()) {
                 // --- Utilisateurs ---
-                User admin = User.userBuilder()
-                        .firstName("Admin").lastName("Root").name("Admin Root")
-                        .jobTitle("Administrator").email("admin@soprahr.com")
-                        .password(passwordEncoder.encode("Admin@123"))
-                        .phone("+21690000111").role(UserRole.ADMIN)
-                        .salary(new BigDecimal("2500")).company("Sopra HR")
-                        .profilePicture(DEFAULT_PROFILE_PICTURE)
-                        .build();
                 User hrExpert = User.userBuilder()
                         .firstName("Expert").lastName("RH").name("Expert RH")
                         .jobTitle("HR Expert").email("hr@soprahr.com")
@@ -87,7 +80,6 @@ public class DataInitializer {
                         .salary(new BigDecimal("1200")).company("Sopra HR")
                         .profilePicture(DEFAULT_PROFILE_PICTURE)
                         .build();
-                userRepository.save(admin);
                 userRepository.save(hrExpert);
                 userRepository.save(emp1);
                 userRepository.save(emp2);
@@ -157,98 +149,84 @@ public class DataInitializer {
                 repaymentScheduleRepository.save(ech4);
 
                 // --- Notifications ---
-                Notification notif1 = Notification.builder()
-                        .title("Nouvelle demande d'avance")
-                        .message("Votre demande est en attente de validation.")
-                        .type(NotificationType.REQUEST_PENDING)
+                // Créer des notifications pour tous les utilisateurs
+                List<User> allUsers = userRepository.findAll();
+                for (User user : allUsers) {
+                    // 3 notifications de base pour tous les utilisateurs
+                    notificationRepository.save(Notification.builder()
+                        .title("Bienvenue sur Sopra HR !")
+                        .message("Bonjour " + user.getFirstName() + ", nous sommes ravis de vous accueillir sur la plateforme Sopra HR. Explorez vos fonctionnalités dès maintenant !")
+                        .type(NotificationType.INFO)
+                        .recipient(user)
                         .read(false)
-                        .recipient(emp1)
-                        .relatedRequest(req1)
-                        .build();
-                Notification notif2 = Notification.builder()
-                        .title("Demande approuvée")
-                        .message("Votre demande a été approuvée.")
-                        .type(NotificationType.REQUEST_APPROVAL)
+                        .build());
+                    notificationRepository.save(Notification.builder()
+                        .title("Astuce : Gérer vos demandes")
+                        .message("Vous pouvez suivre l'état de vos demandes d'avance et recevoir des notifications en temps réel.")
+                        .type(NotificationType.SUGGESTION)
+                        .recipient(user)
                         .read(false)
-                        .recipient(emp2)
-                        .relatedRequest(req2)
-                        .build();
-                Notification notif3 = Notification.builder()
-                        .title("Demande rejetée")
-                        .message("Votre demande a été rejetée.")
-                        .type(NotificationType.REQUEST_REJECTION)
+                        .build());
+                    notificationRepository.save(Notification.builder()
+                        .title("Nouveau : Notifications intelligentes")
+                        .message("Recevez des rappels, des conseils et des alertes personnalisées pour optimiser votre expérience sur Sopra HR.")
+                        .type(NotificationType.POLICY_UPDATE)
+                        .recipient(user)
                         .read(false)
-                        .recipient(emp3)
-                        .relatedRequest(req3)
-                        .build();
-                notificationRepository.save(notif1);
-                notificationRepository.save(notif2);
-                notificationRepository.save(notif3);
+                        .build());
+                    
+                    // Notifications spécifiques selon le rôle
+                    if (user.getRole() == UserRole.EMPLOYEE) {
+                        notificationRepository.save(Notification.builder()
+                            .title("Rappel : échéance de remboursement")
+                            .message("Votre prochaine échéance de remboursement est prévue pour le 5 août.")
+                            .type(NotificationType.UPCOMING_INSTALLMENT)
+                            .recipient(user)
+                            .read(false)
+                            .build());
+                        notificationRepository.save(Notification.builder()
+                            .title("Bravo !")
+                            .message("Vous avez terminé le remboursement de votre avance en temps et en heure.")
+                            .type(NotificationType.POSITIVE_FEEDBACK)
+                            .recipient(user)
+                            .read(false)
+                            .build());
+                        notificationRepository.save(Notification.builder()
+                            .title("Rappel d'inactivité")
+                            .message("Vous ne vous êtes pas connecté depuis 30 jours.")
+                            .type(NotificationType.INACTIVITY_REMINDER)
+                            .recipient(user)
+                            .read(false)
+                            .build());
+                    } else if (user.getRole() == UserRole.HR_EXPERT) {
+                        notificationRepository.save(Notification.builder()
+                            .title("Statistiques RH du mois")
+                            .message("Ce mois-ci, 85% des demandes ont été traitées en moins de 2 jours.")
+                            .type(NotificationType.STATISTICS_ALERT)
+                            .recipient(user)
+                            .read(false)
+                            .build());
+                        notificationRepository.save(Notification.builder()
+                            .title("Maintenance prévue")
+                            .message("Une maintenance technique aura lieu vendredi de 18h à 20h. Merci de votre compréhension.")
+                            .type(NotificationType.MAINTENANCE)
+                            .recipient(user)
+                            .read(false)
+                            .build());
+                        notificationRepository.save(Notification.builder()
+                            .title("Détection de pattern")
+                            .message("3+ employés du département " + emp1.getJobTitle() + " ont fait une demande ce mois-ci.")
+                            .type(NotificationType.PATTERN_DETECTION)
+                            .recipient(user)
+                            .build());
+                    }
+                }
 
-                // --- Intelligent Notifications (for emp1) ---
-                notificationRepository.save(Notification.builder()
-                        .title("Rappel d'inactivité")
-                        .message("Vous ne vous êtes pas connecté depuis 30 jours.")
-                        .type(NotificationType.INACTIVITY_REMINDER)
-                        .recipient(emp1)
-                        .build());
-
-                notificationRepository.save(Notification.builder()
-                        .title("Bravo !")
-                        .message("Vous avez terminé le remboursement de votre avance en temps et en heure.")
-                        .type(NotificationType.POSITIVE_FEEDBACK)
-                        .recipient(emp1)
-                        .build());
-                
-                // --- Intelligent Notifications (for hr1) ---
-                notificationRepository.save(Notification.builder()
-                        .title("Rappel 3 jours")
-                        .message("La demande de " + emp3.getFirstName() + " est en attente depuis 3 jours.")
-                        .type(NotificationType.PROGRESSIVE_REMINDER_3D)
-                        .recipient(hrExpert) // Assuming hrExpert is the HR user
-                        .relatedRequest(req3)
-                        .build());
-                
-                notificationRepository.save(Notification.builder()
-                        .title("Détection de pattern")
-                        .message("3+ employés du département " + emp1.getJobTitle() + " ont fait une demande ce mois-ci.")
-                        .type(NotificationType.PATTERN_DETECTION)
-                        .recipient(hrExpert) // Assuming hrExpert is the HR user
-                        .build());
-
-                notificationRepository.save(Notification.builder()
-                        .title("Rappel Calendrier")
-                        .message("N'oubliez pas de suivre la demande de " + emp2.getFirstName())
-                        .type(NotificationType.CALENDAR_REMINDER)
-                        .recipient(hrExpert) // Assuming hrExpert is the HR user
-                        .relatedRequest(req2)
-                        .build());
-
-                // --- Historique des demandes ---
-                RequestHistory hist1 = RequestHistory.builder()
-                        .request(req1)
-                        .previousStatus(RequestStatus.PENDING)
-                        .newStatus(RequestStatus.PENDING)
-                        .changedBy(admin)
-                        .comment("Demande créée.")
-                        .build();
-                RequestHistory hist2 = RequestHistory.builder()
-                        .request(req2)
-                        .previousStatus(RequestStatus.PENDING)
-                        .newStatus(RequestStatus.APPROVED)
-                        .changedBy(hrExpert)
-                        .comment("Demande validée par RH.")
-                        .build();
-                RequestHistory hist3 = RequestHistory.builder()
-                        .request(req3)
-                        .previousStatus(RequestStatus.PENDING)
-                        .newStatus(RequestStatus.REJECTED)
-                        .changedBy(hrExpert)
-                        .comment("Demande rejetée par RH.")
-                        .build();
-                requestHistoryRepository.save(hist1);
-                requestHistoryRepository.save(hist2);
-                requestHistoryRepository.save(hist3);
+                // --- Fin de l'initialisation des données ---
+                System.out.println("✅ Données initialisées avec succès !");
+                System.out.println("👥 Utilisateurs créés : " + userRepository.count());
+                System.out.println("📋 Demandes créées : " + salaryAdvanceRequestRepository.count());
+                System.out.println("🔔 Notifications créées : " + notificationRepository.count());
             }
         };
     }

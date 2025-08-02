@@ -35,6 +35,7 @@ public class UserService implements IUserService {
         dto.setRole(user.getRole());
         dto.setCompany(user.getCompany());
         dto.setSalary(Optional.ofNullable(user.getSalary()).orElse(BigDecimal.ZERO));
+        dto.setProfilePicture(user.getProfilePicture());
         return dto;
     }
 
@@ -49,6 +50,7 @@ public class UserService implements IUserService {
         user.setRole(dto.getRole());
         user.setCompany(dto.getCompany());
         user.setSalary(dto.getSalary() != null ? dto.getSalary() : BigDecimal.ZERO);
+        user.setProfilePicture(dto.getProfilePicture());
     }
 
     @Override

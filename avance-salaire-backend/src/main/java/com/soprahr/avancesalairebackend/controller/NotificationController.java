@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import java.util.Map;
+import org.springframework.security.core.Authentication;
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
@@ -26,6 +27,22 @@ public class NotificationController {
 
     public NotificationController(NotificationService notificationService) {
         this.notificationService = notificationService;
+    }
+
+    @GetMapping("")
+    public List<NotificationDTO> getCurrentUserNotifications(Authentication authentication) {
+        com.soprahr.avancesalairebackend.model.entity.User user = (com.soprahr.avancesalairebackend.model.entity.User) authentication.getPrincipal();
+        return notificationService.getUserNotifications(user.getId());
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("Notification API is working!");
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("Backend is running!");
     }
 
     @GetMapping("/user/{userId}")

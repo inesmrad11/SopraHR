@@ -66,8 +66,7 @@ public class SecurityConfiguration {
                     "/swagger-resources/**",
                     "/configuration/security",
                     "/swagger-ui.html",
-                    "/ws-notifications/**",
-                    "/api/notifications/**"
+                    "/ws-notifications/**"
                 ).permitAll()
                 // Public endpoints (explicitly list each one for clarity and security)
                 .requestMatchers(
@@ -75,7 +74,9 @@ public class SecurityConfiguration {
                     "/api/auth/register",
                     "/api/auth/send-otp",
                     "/api/auth/verify-otp",
-                    "/api/auth/recaptcha-verify"
+                    "/api/auth/recaptcha-verify",
+                    "/api/notifications/test",
+                    "/api/notifications/health"
                 ).permitAll()
                 // Allow preflight requests
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()

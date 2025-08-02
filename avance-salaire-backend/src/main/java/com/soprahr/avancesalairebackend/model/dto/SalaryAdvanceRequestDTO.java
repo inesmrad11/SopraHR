@@ -25,4 +25,10 @@ public class SalaryAdvanceRequestDTO {
     private BigDecimal employeeSalaryNet;
     private BigDecimal plafondDisponible;
     private BigDecimal totalAvancesNonRemboursees;
+    
+    // Additional fields for frontend compatibility
+    private Long employeeId;
+    private String employeeEmail;
+    private String employeeProfilePicture;
+    private Integer repaymentMonths;
 }

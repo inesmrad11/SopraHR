@@ -73,6 +73,9 @@ public class SalaryAdvanceRequest implements Serializable {
     @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RequestHistory> history;
 
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();

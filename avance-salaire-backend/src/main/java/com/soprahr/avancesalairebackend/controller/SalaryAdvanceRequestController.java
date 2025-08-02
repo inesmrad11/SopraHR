@@ -20,6 +20,13 @@ import org.springframework.http.MediaType;
 import org.springframework.core.io.ByteArrayResource;
 import com.soprahr.avancesalairebackend.model.dto.RequestHistoryItemDTO;
 import java.util.Map;
+import com.soprahr.avancesalairebackend.model.dto.CommentDTO;
+import com.soprahr.avancesalairebackend.model.entity.Comment;
+import com.soprahr.avancesalairebackend.repository.CommentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.soprahr.avancesalairebackend.repository.SalaryAdvanceRequestRepository;
+import com.soprahr.avancesalairebackend.model.entity.User;
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/api/advance-requests")
@@ -28,6 +35,9 @@ public class SalaryAdvanceRequestController {
 
     private final SalaryAdvanceRequestService salaryAdvanceRequestService;
     private final UserRepository userRepository;
+    private final SalaryAdvanceRequestRepository salaryAdvanceRequestRepository;
+    @Autowired
+    private CommentRepository commentRepository;
 
     @PostMapping
     public ResponseEntity<SalaryAdvanceRequestDTO> createRequest(@RequestBody CreateSalaryAdvanceRequestDTO dto) {
@@ -47,6 +57,11 @@ public class SalaryAdvanceRequestController {
             @RequestParam Optional<LocalDate> to
     ) {
         return ResponseEntity.ok(salaryAdvanceRequestService.listRequests(status, employeeId, from, to));
+    }
+
+    @GetMapping("/test")
+    public ResponseEntity<String> testEndpoint() {
+        return ResponseEntity.ok("API is working!");
     }
 
     @GetMapping("/me")
@@ -128,6 +143,47 @@ public class SalaryAdvanceRequestController {
             .contentType(MediaType.APPLICATION_PDF)
             .contentLength(data.length)
             .body(resource);
+    }
+
+    @GetMapping("/{id}/steps")
+    public ResponseEntity<List<com.soprahr.avancesalairebackend.model.dto.RequestStepDTO>> getRequestSteps(@PathVariable Long id) {
+        return ResponseEntity.ok(salaryAdvanceRequestService.getRequestSteps(id));
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<List<CommentDTO>> getComments(@PathVariable Long id) {
+        List<Comment> comments = commentRepository.findByRequestIdOrderByCreatedAtAsc(id);
+        List<CommentDTO> dtos = comments.stream().map(c -> {
+            CommentDTO dto = new CommentDTO();
+            dto.setId(c.getId());
+            dto.setAuthorName(c.getAuthor().getFirstName() + " " + c.getAuthor().getLastName());
+            dto.setAuthorRole(c.getAuthor().getRole().name());
+            dto.setType(c.getType());
+            dto.setMessage(c.getMessage());
+            dto.setCreatedAt(c.getCreatedAt());
+            return dto;
+        }).toList();
+        return ResponseEntity.ok(dtos);
+    }
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<CommentDTO> addComment(@PathVariable Long id, @RequestBody CommentDTO dto, Authentication authentication) {
+        SalaryAdvanceRequest request = salaryAdvanceRequestRepository.findById(id).orElseThrow();
+        // Récupérer l'utilisateur authentifié
+        String email = authentication.getName();
+        User author = userRepository.findByEmail(email).orElseThrow(() -> new EntityNotFoundException("Utilisateur non trouvé : " + email));
+        
+        Comment comment = new Comment();
+        comment.setRequest(request);
+        comment.setAuthor(author);
+        comment.setType(dto.getType());
+        comment.setMessage(dto.getMessage());
+        commentRepository.save(comment);
+        dto.setId(comment.getId());
+        dto.setAuthorName(author.getFirstName() + " " + author.getLastName());
+        dto.setAuthorRole(author.getRole().name());
+        dto.setCreatedAt(comment.getCreatedAt());
+        return ResponseEntity.ok(dto);
     }
 
     @PutMapping("/{id}/approve")
