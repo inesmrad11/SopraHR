@@ -23,8 +23,8 @@
   overflow: hidden;
 }
 .form-header {
-  background: #f6f7fa;
-  color: #222;
+  background: url('/assets/images/welcome/1.png') center center/cover no-repeat;
+  color: white;
   text-align: left;
   padding: 1.5rem 2rem 1rem 2rem;
   position: relative;
@@ -38,20 +38,25 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1;
 }
 .form-header h1 {
   font-size: 1.3rem;
   font-weight: 700;
   margin-bottom: 0.3rem;
-  color: #111;
+  color: white;
   font-family: inherit;
+  position: relative;
+  z-index: 2;
 }
 .form-header p {
   opacity: 1;
   font-size: 0.95rem;
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.9);
   font-family: inherit;
+  position: relative;
+  z-index: 2;
 }
 .stepper-container {
   padding: 2rem;

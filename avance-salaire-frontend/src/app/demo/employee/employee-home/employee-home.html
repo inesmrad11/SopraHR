@@ -1,301 +1,549 @@
-<div class="welcome-banner" [ngStyle]="{'background-image': 'url(' + welcomeImage + ')'}">
-  <div class="welcome-banner-overlay"></div>
-  <div class="welcome-banner-content">
-    <div class="welcome-banner-text">
-      <div class="welcome-date">{{ frenchDate }}</div>
-      <div class="welcome-greeting">Bonjour, <b>{{ userFirstName }} {{ userLastName }}</b></div>
+<app-breadcrumb type="theme1"></app-breadcrumb>
+<!-- Dashboard moderne avec design WealthVault et couleurs Sopra HR -->
+<div class="light-dashboard">
+  <!-- Header identique à hr-statistics -->
+  <div class="welcome-banner" [ngStyle]="{'background-image': 'url(' + welcomeImage + ')'}">
+    <div class="welcome-banner-overlay"></div>
+    <div class="welcome-banner-content">
+      <div class="welcome-banner-text">
+        <div class="welcome-date">{{ frenchDate }}</div>
+        <div class="welcome-greeting">Bonjour, <b>{{ userFullName }}</b></div>
+        <div class="welcome-description">Suivez vos avances de salaire et gérez votre santé financière intelligemment.</div>
+      </div>
+      <div class="welcome-banner-actions">
+        <button class="action-btn search-btn" (click)="toggleSearch()">
+          <i antIcon type="search" theme="outline"></i>
+        </button>
+        <button class="action-btn notification-btn" (click)="toggleNotifications()">
+          <i antIcon type="bell" theme="outline"></i>
+          <span class="notification-badge" *ngIf="unreadNotifications > 0">{{ unreadNotifications }}</span>
+        </button>
+        <button class="export-btn" (click)="exportData()">
+          <i antIcon type="download" theme="outline"></i>
+          Exporter
+        </button>
+      </div>
     </div>
   </div>
-</div>
-<div class="row mb-4">
-  <div class="col-md-6 col-xl-2 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <div class="text-muted">Salaire net</div>
-      <div class="fw-bold fs-4">{{ dashboardStats.salary | number:'1.0-0' }} TND</div>
-    </app-card>
-  </div>
-  <div class="col-md-6 col-xl-2 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <div class="text-muted">Plafond autorisé</div>
-      <div class="fw-bold fs-4">{{ dashboardStats.plafond | number:'1.0-0' }} TND</div>
-    </app-card>
-  </div>
-  <div class="col-md-6 col-xl-2 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <div class="text-muted">Cumul avances en cours</div>
-      <div class="fw-bold fs-4">{{ dashboardStats.totalNonRembourse | number:'1.0-0' }} TND</div>
-    </app-card>
-  </div>
-  <div class="col-md-6 col-xl-2 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <div class="text-muted">Marge restante</div>
-      <div class="fw-bold fs-4">
-        {{ dashboardStats.plafondDisponible | number:'1.0-0' }} TND
-        <span *ngIf="dashboardStats.plafondDisponible < dashboardStats.salary" class="badge bg-warning ms-2">Attention : marge faible</span>
-        <span *ngIf="dashboardStats.plafondDisponible <= 0" class="badge bg-danger ms-2">Plafond atteint</span>
+
+  <!-- Barre de recherche -->
+  <div class="search-overlay" *ngIf="showSearch" (click)="closeSearch()">
+    <div class="search-modal" (click)="$event.stopPropagation()">
+      <div class="search-header">
+        <h3>Recherche avancée</h3>
+        <button class="close-btn" (click)="closeSearch()">
+          <i antIcon type="close" theme="outline"></i>
+        </button>
       </div>
-    </app-card>
-  </div>
-  <div class="col-md-6 col-xl-2 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <div class="text-muted">Progression remboursement</div>
-      <div class="fw-bold fs-4">
-        {{ globalRepaymentProgress }} %
-        <span *ngIf="globalRepaymentProgress === 100" class="badge bg-success ms-2">Bravo !</span>
-      </div>
-    </app-card>
-  </div>
-  <div class="col-md-6 col-xl-2 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <div class="text-muted">Santé financière</div>
-      <div class="fw-bold fs-4">
-        <span class="badge bg-{{ financialHealthColor }} fs-5">{{ financialHealthScore }} / 100</span>
-        <span class="d-block mt-1 text-{{ financialHealthColor }}">{{ financialHealthLabel }}</span>
-      </div>
-    </app-card>
-  </div>
-</div>
-<div *ngIf="dashboardStats.plafondDisponible <= 0" class="alert alert-danger d-flex align-items-center mb-3" role="alert">
-  <i class="bi bi-exclamation-triangle-fill me-2"></i>
-  <div>Vous avez atteint le <strong>plafond autorisé</strong> d'avances. Veuillez rembourser avant de faire une nouvelle demande.</div>
-</div>
-<div *ngIf="dashboardStats.plafondDisponible > 0 && dashboardStats.plafondDisponible < dashboardStats.salary" class="alert alert-warning d-flex align-items-center mb-3" role="alert">
-  <i class="bi bi-exclamation-circle me-2"></i>
-  <div>Attention : votre <strong>marge restante</strong> est faible. Vous approchez du plafond autorisé.</div>
-</div>
-<div *ngIf="globalRepaymentProgress === 100 && dashboardStats.totalNonRembourse === 0" class="alert alert-success d-flex align-items-center mb-3" role="alert">
-  <i class="bi bi-check-circle-fill me-2"></i>
-  <div>Félicitations ! Toutes vos avances sont totalement remboursées.</div>
-</div>
-<div class="row mb-4">
-  <div class="col-12 col-md-6 col-xl-4 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <h6 class="mb-2 text-muted">Marge utilisée vs Marge restante</h6>
-      <apx-chart
-        [series]="donutChartSeries"
-        [chart]="donutChartOptions.chart"
-        [labels]="donutChartOptions.labels"
-        [colors]="donutChartOptions.colors"
-        [legend]="donutChartOptions.legend"
-        [dataLabels]="donutChartOptions.dataLabels"
-        [tooltip]="donutChartOptions.tooltip"
-        style="width:100%; min-height:220px;"
-      ></apx-chart>
-    </app-card>
-  </div>
-  <div class="col-12 col-md-6 col-xl-4 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <h6 class="mb-2 text-muted">Répartition des statuts de mes demandes</h6>
-      <apx-chart
-        [series]="pieChartSeries"
-        [chart]="pieChartOptions.chart"
-        [labels]="pieChartOptions.labels"
-        [colors]="pieChartOptions.colors"
-        [legend]="pieChartOptions.legend"
-        [dataLabels]="pieChartOptions.dataLabels"
-        [tooltip]="pieChartOptions.tooltip"
-        style="width:100%; min-height:220px;"
-      ></apx-chart>
-    </app-card>
-  </div>
-  <div class="col-12 col-md-6 col-xl-4 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <h6 class="mb-2 text-muted">Répartition des motifs d'avance</h6>
-      <apx-chart
-        [series]="reasonPieChartSeries"
-        [chart]="reasonPieChartOptions.chart"
-        [labels]="reasonPieChartOptions.labels"
-        [colors]="reasonPieChartOptions.colors"
-        [legend]="reasonPieChartOptions.legend"
-        [dataLabels]="reasonPieChartOptions.dataLabels"
-        [tooltip]="reasonPieChartOptions.tooltip"
-        style="width:100%; min-height:220px;"
-      ></apx-chart>
-    </app-card>
-  </div>
-</div>
-<div class="row mb-4">
-  <div class="col-12 col-xl-8 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card">
-      <h6 class="mb-2 text-muted">Évolution du cumul des avances non remboursées</h6>
-      <apx-chart
-        [series]="cumulativeChartSeries"
-        [chart]="cumulativeChartOptions.chart"
-        [colors]="cumulativeChartOptions.colors"
-        [dataLabels]="cumulativeChartOptions.dataLabels"
-        [stroke]="cumulativeChartOptions.stroke"
-        [xaxis]="cumulativeChartOptions.xaxis"
-        [yaxis]="cumulativeChartOptions.yaxis"
-        [grid]="cumulativeChartOptions.grid"
-        [tooltip]="cumulativeChartOptions.tooltip"
-        style="width:100%; min-height:250px;"
-      ></apx-chart>
-    </app-card>
-  </div>
-  <div class="col-12 col-xl-8 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card">
-      <h6 class="mb-2 text-muted">% du salaire remboursé chaque mois</h6>
-      <apx-chart
-        [series]="salaryRepaymentChartSeries"
-        [chart]="salaryRepaymentChartOptions.chart"
-        [colors]="salaryRepaymentChartOptions.colors"
-        [dataLabels]="salaryRepaymentChartOptions.dataLabels"
-        [xaxis]="salaryRepaymentChartOptions.xaxis"
-        [yaxis]="salaryRepaymentChartOptions.yaxis"
-        [grid]="salaryRepaymentChartOptions.grid"
-        [tooltip]="salaryRepaymentChartOptions.tooltip"
-        style="width:100%; min-height:250px;"
-      ></apx-chart>
-    </app-card>
-  </div>
-  <div class="col-12 col-xl-4 mb-3">
-    <app-card [showHeader]="false" blockClass="dashboard-card text-center">
-      <h6 class="mb-2 text-muted">Prévision retour à zéro</h6>
-      <div class="fs-5 fw-bold">
-        <ng-container *ngIf="predictedZeroDate; else noZero">
-          {{ predictedZeroDate | date:'longDate' }}
-        </ng-container>
-        <ng-template #noZero>
-          <span class="text-muted">Aucune avance en cours</span>
-        </ng-template>
-      </div>
-    </app-card>
-  </div>
-</div>
-<div class="row mb-4">
-  <div class="col-12">
-    <app-card [showHeader]="false" blockClass="dashboard-card">
-      <h6 class="mb-2 text-muted">Timeline de remboursement (Gantt simplifié)</h6>
-      <div class="gantt-timeline">
-        <div *ngIf="!ganttData.length" class="text-muted">Aucune avance en cours</div>
-        <div *ngFor="let avance of ganttData" class="gantt-row mb-2">
-          <div class="fw-bold mb-1">#{{ avance.id }} - {{ avance.reason }}</div>
-          <div class="gantt-bar d-flex align-items-center">
-            <div *ngFor="let sched of avance.schedule" class="gantt-segment me-1" [ngClass]="sched.paid ? 'gantt-paid' : 'gantt-unpaid'" [title]="sched.dueDate | date:'MMM yyyy'">
-              <span class="d-block small">{{ sched.dueDate | date:'MMM' }}</span>
+      <div class="search-content">
+        <div class="search-input-group">
+          <i antIcon type="search" theme="outline"></i>
+          <input 
+            type="text" 
+            placeholder="Rechercher dans vos demandes..." 
+            [(ngModel)]="searchQuery"
+            (input)="onSearchInput()"
+            class="search-input"
+          >
+        </div>
+        <div class="search-filters">
+          <div class="filter-group">
+            <label>Statut</label>
+            <select [(ngModel)]="searchFilters.status" (change)="applyFilters()">
+              <option value="">Tous</option>
+              <option value="PENDING">En attente</option>
+              <option value="APPROVED">Approuvées</option>
+              <option value="REJECTED">Rejetées</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Montant minimum</label>
+            <input type="number" [(ngModel)]="searchFilters.minAmount" (input)="applyFilters()" placeholder="0">
+          </div>
+          <div class="filter-group">
+            <label>Montant maximum</label>
+            <input type="number" [(ngModel)]="searchFilters.maxAmount" (input)="applyFilters()" placeholder="∞">
+          </div>
+        </div>
+        <div class="search-results" *ngIf="searchResults.length > 0">
+          <h4>Résultats ({{ searchResults.length }})</h4>
+          <div class="result-item" *ngFor="let result of searchResults" (click)="viewRequestDetails(result)">
+            <div class="result-info">
+              <div class="result-title">Demande #{{ result.id }}</div>
+              <div class="result-details">{{ result.requestedAmount }} TND - {{ result.status }}</div>
             </div>
+            <i antIcon type="arrow-right" theme="outline"></i>
           </div>
         </div>
       </div>
-    </app-card>
+    </div>
   </div>
-</div>
-<div class="row">
-    @for (analytic of AnalyticEcommerce; track analytic) {
-      <div class="col-md-6 col-xl-3">
-        <app-card [showHeader]="false" blockClass="dashboard-card">
-          <h6 class="mb-2 f-w-400 text-muted">{{ analytic.title }}</h6>
-          <h4 class="mb-3">
-            {{ analytic.amount }}
-            <span class="badge {{ analytic.background }} border {{ analytic.border }} ">
-              <i antIcon type="{{ analytic.icon }}" theme="outline"></i>
-              {{ analytic.percentage }}
-            </span>
-          </h4>
-          <p class="mb-0 text-muted text-sm">
-            You made an extra
-            <span class="{{ analytic.color }}">{{ analytic.number }}</span>
-            this year
-          </p>
-        </app-card>
+
+  <!-- Modal des notifications -->
+  <div class="notification-overlay" *ngIf="showNotifications" (click)="closeNotifications()">
+    <div class="notification-modal" (click)="$event.stopPropagation()">
+      <div class="notification-header">
+        <h3>Notifications</h3>
+        <button class="close-btn" (click)="closeNotifications()">
+          <i antIcon type="close" theme="outline"></i>
+        </button>
       </div>
-    }
-    <div class="col-md-12 col-xl-8">
-      <app-monthly-bar-chart [series]="monthlyChartSeries" [categories]="monthlyChartCategories" />
-    </div>
-    <div class="col-md-12 col-xl-4">
-      <app-income-overview-chart [series]="incomeChartSeries" [categories]="incomeChartCategories" />
-    </div>
-  
-    <div class="col-md-12 col-xl-8">
-      <h5 class="mb-3">Mes dernières demandes d'avance</h5>
-      <div class="card tbl-card">
-        <div class="table-responsive">
-          <table class="table table-hover mb-0">
-            <thead>
-              <tr>
-                <th>TRACKING NO.</th>
-                <th>PRODUCT NAME</th>
-                <th>STATUS</th>
-                <th class="text-end">TOTAL ORDER</th>
-                <th class="text-end">TOTAL AMOUNT</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (order of recentOrder; track order) {
-                <tr>
-                  <td>
-                    <a href="javascript:" class="text-muted">{{ order.id }}</a>
-                  </td>
-                  <td>{{ order.name }}</td>
-                  <td>
-                    <span class="d-block">
-                      <i class="badge-circle {{ order.status_type }} f-10 m-r-5"></i>
-                      {{ order.status }}
-                    </span>
-                  </td>
-                  <td class="text-end">{{ order.quantity }}</td>
-                  <td class="text-end">{{ order.amount }}</td>
-                </tr>
-              }
-            </tbody>
-          </table>
+      <div class="notification-content">
+        <div class="notification-item" *ngFor="let notification of notifications">
+          <div class="notification-icon" [ngClass]="notification.type">
+            <i antIcon [type]="getNotificationIcon(notification.type)" theme="outline"></i>
+          </div>
+          <div class="notification-body">
+            <div class="notification-title">{{ notification.title }}</div>
+            <div class="notification-message">{{ notification.message }}</div>
+            <div class="notification-time">{{ notification.createdAt | date:'short' }}</div>
+          </div>
+          <button class="mark-read-btn" (click)="markAsRead(notification.id)" *ngIf="!notification.read">
+            <i antIcon type="check" theme="outline"></i>
+          </button>
+        </div>
+        <div class="no-notifications" *ngIf="notifications.length === 0">
+          <i antIcon type="bell" theme="outline"></i>
+          <p>Aucune notification</p>
         </div>
       </div>
     </div>
-    <div class="col-md-12 col-xl-4">
-      <app-analytics-chart />
+  </div>
+
+  <!-- Nouveau layout avec 3 sections principales -->
+  <div class="dashboard-main-layout">
+    <!-- Section gauche - Grande carte avec métriques -->
+    <div class="left-section">
+      <div class="large-metric-card">
+        <div class="metric-card-header">
+          <div class="metric-badge">
+            <i antIcon type="check-circle" theme="outline"></i>
+            Ce mois +{{ dashboardStats.nbAvancesPossibles }}% Avances
+          </div>
+        </div>
+        <div class="metric-card-content">
+          <div class="metric-title">
+            <i antIcon type="sync" theme="outline"></i>
+            <h2 class="metric-greeting">{{ userFullName }}</h2>
+          </div>
+          <p class="metric-description">Gérez vos avances de salaire et suivez votre progression financière</p>
+        </div>
+        <div class="metric-card-stats">
+          <div class="stat-item">
+            <div class="stat-value">{{ dashboardStats.salary | number:'1.0-0' }} TND</div>
+            <div class="stat-label">Salaire net</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ dashboardStats.plafond | number:'1.0-0' }} TND</div>
+            <div class="stat-label">Plafond autorisé</div>
+          </div>
+        </div>
+      </div>
     </div>
-  
-    <div class="col-md-12 col-xl-8">
-      <app-sales-report-chart />
+
+    <!-- Section droite - Cartes plus petites -->
+    <div class="right-section">
+      <!-- Carte 1: Avances en cours -->
+      <div class="small-metric-card advances-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i antIcon type="file" theme="outline"></i>
+            <h3>Avances en cours</h3>
+          </div>
+          <div class="card-trend negative">-{{ dashboardStats.totalNonRembourse | number:'1.0-0' }}%</div>
+        </div>
+        <div class="card-value">{{ dashboardStats.totalNonRembourse | number:'1.0-0' }}</div>
+        <div class="card-chart">
+          <div class="mini-bar-chart">
+            <div class="bar" style="height: 60%"></div>
+            <div class="bar" style="height: 80%"></div>
+            <div class="bar" style="height: 40%"></div>
+            <div class="bar" style="height: 90%"></div>
+            <div class="bar" style="height: 70%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Carte 2: Santé financière -->
+      <div class="small-metric-card health-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i antIcon type="check-circle" theme="outline"></i>
+            <h3>Santé financière</h3>
+          </div>
+          <div class="card-trend positive">+{{ financialHealthScore }}%</div>
+        </div>
+        <div class="card-value">{{ financialHealthScore }}/100</div>
+        <div class="card-chart">
+          <div class="mini-line-chart">
+            <svg width="100" height="40" viewBox="0 0 100 40">
+              <path d="M0,30 Q25,20 50,25 T100,15" stroke="#10b981" stroke-width="2" fill="none"/>
+            </svg>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="col-md-12 col-xl-4">
-      <h5 class="mb-3">Historique de mes transactions</h5>
-      <div class="card">
-        <div class="list-group list-group-flush">
-          @for (history of transaction; track history) {
-            <a href="javascript:" class="list-group-item list-group-item-action px-3">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <div class="avatar avatar-s rounded-circle {{ history.background }}">
-                    <i class="f-16" antIcon type="{{ history.icon }}" theme="outline"></i>
-                  </div>
+  </div>
+
+  <!-- Section des graphiques et calendrier -->
+  <div class="charts-calendar-section">
+    <!-- Graphiques -->
+    <div class="charts-section">
+      <!-- Graphique d'évolution des avances -->
+      <div class="chart-card evolution-chart">
+        <div class="chart-header">
+          <div class="chart-title">
+            <i antIcon type="rise" theme="outline"></i>
+            Évolution des avances
+          </div>
+          <button class="chart-action" (click)="showChartAnalysis()">Analyse</button>
+        </div>
+        <div class="chart-content">
+          <ng-container *ngIf="monthlyChartSeries && monthlyChartSeries.length">
+            <apx-chart
+              [series]="monthlyChartSeries"
+              [chart]="{ type: 'line', height: 200, background: 'transparent' }"
+              [xaxis]="{ categories: monthlyChartCategories, labels: { style: { colors: '#aaa' } } }"
+              [colors]="['#8b5cf6']"
+              [stroke]="{ curve: 'smooth', width: 3 }"
+              [markers]="{ size: 6, shape: 'circle', colors: ['#fff'], strokeColors: '#8b5cf6', strokeWidth: 3 }"
+              [dataLabels]="{ enabled: false }"
+              [grid]="{ borderColor: '#e9ecef', strokeDashArray: 4 }"
+              [theme]="{ mode: 'light' }"
+            ></apx-chart>
+          </ng-container>
+          <ng-container *ngIf="!monthlyChartSeries || !monthlyChartSeries.length">
+            <div class="no-data">Aucune donnée disponible</div>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Graphique de répartition des statuts -->
+      <div class="chart-card status-chart">
+        <div class="chart-header">
+          <div class="chart-title">
+            <i antIcon type="pie-chart" theme="outline"></i>
+            Répartition des statuts
+          </div>
+        </div>
+        <div class="chart-content">
+          <ng-container *ngIf="statusPieChart && statusPieChart.length">
+            <apx-chart
+              [series]="[statusPieChart[0]?.y || 0, statusPieChart[1]?.y || 0, statusPieChart[2]?.y || 0]"
+              [labels]="['En attente', 'Validées', 'Rejetées']"
+              [chart]="{ type: 'pie', height: 200, background: 'transparent' }"
+              [colors]="['#f6c23e', '#1cc88a', '#e74a3b']"
+              [theme]="{ mode: 'light' }"
+            ></apx-chart>
+          </ng-container>
+          <ng-container *ngIf="!statusPieChart || !statusPieChart.length">
+            <div class="no-data">Aucune donnée disponible</div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- Calendrier -->
+    <div class="calendar-section">
+      <div class="calendar-card">
+        <div class="calendar-header">
+          <h3>Calendrier</h3>
+          <div class="calendar-nav">
+            <button class="nav-btn" (click)="previousMonth()">
+              ‹
+            </button>
+            <span class="current-month">{{ calendarMonth }}</span>
+            <button class="nav-btn" (click)="nextMonth()">
+              ›
+            </button>
+          </div>
+        </div>
+        <div class="calendar-body">
+          <div class="calendar-weekdays">
+            <div class="weekday">Lun</div>
+            <div class="weekday">Mar</div>
+            <div class="weekday">Mer</div>
+            <div class="weekday">Jeu</div>
+            <div class="weekday">Ven</div>
+            <div class="weekday">Sam</div>
+            <div class="weekday">Dim</div>
+          </div>
+          <div class="calendar-days">
+            <div 
+              *ngFor="let day of calendarDays" 
+              class="day" 
+              [class.other-month]="!day.isCurrentMonth"
+              [class.current]="day.isToday"
+              [class.has-event]="day.hasEvent"
+            >
+              {{ day.day }}
+            </div>
+          </div>
+        </div>
+        <div class="calendar-events">
+          <div class="event-item">
+            <div class="event-dot advance"></div>
+            <span>Demande avance</span>
+          </div>
+          <div class="event-item">
+            <div class="event-dot payment"></div>
+            <span>Remboursement</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau des demandes récentes -->
+  <div class="alerts-section">
+    <div class="alerts-header">
+      <h2 class="alerts-title">Mes demandes récentes</h2>
+      <button class="filters-btn" (click)="showSmartFilters()">
+        <i antIcon type="tool" theme="outline"></i>
+        Filtres intelligents
+      </button>
+    </div>
+    <div class="alerts-table">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Date</th>
+            <th>Progression</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (req of filteredRequests; track req) {
+            <tr class="table-row">
+              <td class="amount-cell">{{ req.requestedAmount }} TND</td>
+              <td class="status-cell">
+                <span class="status-badge" [ngClass]="{
+                  'status-pending': req.status === 'PENDING',
+                  'status-approved': req.status === 'APPROVED',
+                  'status-rejected': req.status === 'REJECTED'
+                }">
+                  {{ req.status === 'PENDING' ? 'En attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Rejetée' }}
+                </span>
+              </td>
+              <td class="date-cell">{{ req.requestDate | date:'shortDate' }}</td>
+              <td class="progress-cell">
+                <div class="progress-bar">
+                  <div class="progress-fill" [style.width]="getProgressPercentage(req) + '%'"></div>
                 </div>
-                <div class="flex-grow-1 ms-3">
-                  <h6 class="mb-1">{{ history.title }}</h6>
-                  <p class="mb-0 text-muted">{{ history.time }}</p>
-                </div>
-                <div class="flex-shrink-0 text-end">
-                  <h6 class="mb-1">{{ history.amount }}</h6>
-                  <p class="mb-0 text-muted">{{ history.percentage }}</p>
-                </div>
-              </div>
-            </a>
+                <span class="progress-text">{{ getProgressPercentage(req) }}%</span>
+              </td>
+              <td class="actions-cell">
+                <button class="action-btn" title="Voir détails" (click)="viewRequestDetails(req)">
+                  <i antIcon type="eye" theme="outline"></i>
+                </button>
+              </td>
+            </tr>
           }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Métriques supplémentaires -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-header">
+        <div class="transaction-icon">
+          <i antIcon type="warning" theme="outline"></i>
         </div>
+        <span>Marge restante</span>
       </div>
-      <div class="card">
-        <div class="card-body">
-          <div class="row justify-content-between">
-            <div class="col-auto">
-              <h5>Help & Support Chat</h5>
-              <p class="mb-3">Typical replay within 5 min</p>
-            </div>
-            <div class="col-auto">
-              <div class="user-group mb-3">
-                <img src="assets/images/user/avatar-1.jpg" alt="image" />
-                <img src="assets/images/user/avatar-2.jpg" alt="image" />
-                <img src="assets/images/user/avatar-3.jpg" alt="image" />
-              </div>
-            </div>
-          </div>
-          <div class="d-grid">
-            <div class="btn btn-primary">Need Help?</div>
-          </div>
-        </div>
+      <div class="metric-value">{{ dashboardStats.plafondDisponible | number:'1.0-0' }} TND</div>
+      <div class="metric-progress">
+        <div class="progress-bar" [style.width]="getMarginPercentage() + '%'"></div>
       </div>
     </div>
-    <!-- [ sample-page ] end -->
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <i antIcon type="clock-circle" theme="outline"></i>
+        <span>Progression remboursement</span>
+      </div>
+      <div class="metric-value">{{ globalRepaymentProgress }}%</div>
+      <div class="metric-trend" [ngClass]="globalRepaymentProgress === 100 ? 'positive' : 'negative'">
+        {{ globalRepaymentProgress === 100 ? 'Bravo !' : 'En cours' }}
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <i antIcon type="alert" theme="outline"></i>
+        <span>Santé financière</span>
+      </div>
+      <div class="metric-value">{{ financialHealthScore }} / 100</div>
+      <div class="metric-trend" [ngClass]="financialHealthColor">
+        {{ financialHealthLabel }}
+      </div>
+    </div>
   </div>
+</div>
+  
+<!-- Modal d'analyse des graphiques -->
+<div class="analysis-overlay" *ngIf="showAnalysis" (click)="closeAnalysis()">
+  <div class="analysis-modal" (click)="$event.stopPropagation()">
+    <div class="analysis-header">
+      <h3>Analyse détaillée - Évolution des avances</h3>
+      <button class="close-btn" (click)="closeAnalysis()">
+        <i antIcon type="close" theme="outline"></i>
+      </button>
+    </div>
+    <div class="analysis-content">
+      <div class="analysis-stats">
+        <div class="stat-card">
+          <div class="stat-title">Total des demandes</div>
+          <div class="stat-value">{{ totalRequests }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Moyenne mensuelle</div>
+          <div class="stat-value">{{ averageMonthlyRequests }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-title">Tendance</div>
+          <div class="stat-value" [ngClass]="trendDirection">{{ trendPercentage }}%</div>
+        </div>
+      </div>
+      <div class="analysis-insights">
+        <h4>Insights</h4>
+        <div class="insight-item" *ngFor="let insight of chartInsights">
+          <i antIcon [type]="insight.icon" theme="outline"></i>
+          <span>{{ insight.message }}</span>
+        </div>
+      </div>
+      <div class="analysis-actions">
+        <button class="action-btn" (click)="exportChartData()">
+          <i antIcon type="download" theme="outline"></i>
+          Exporter les données
+        </button>
+        <button class="action-btn" (click)="generateReport()">
+          <i antIcon type="file-text" theme="outline"></i>
+          Générer un rapport
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal des filtres intelligents -->
+<div class="filters-overlay" *ngIf="showFilters" (click)="closeFilters()">
+  <div class="filters-modal" (click)="$event.stopPropagation()">
+    <div class="filters-header">
+      <h3>Filtres intelligents</h3>
+      <button class="close-btn" (click)="closeFilters()">
+        <i antIcon type="close" theme="outline"></i>
+      </button>
+    </div>
+    <div class="filters-content">
+      <div class="filter-section">
+        <h4>Filtres de base</h4>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Statut</label>
+            <select [(ngModel)]="smartFilters.status">
+              <option value="">Tous les statuts</option>
+              <option value="PENDING">En attente</option>
+              <option value="APPROVED">Approuvées</option>
+              <option value="REJECTED">Rejetées</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Période</label>
+            <select [(ngModel)]="smartFilters.period">
+              <option value="">Toute période</option>
+              <option value="7">7 derniers jours</option>
+              <option value="30">30 derniers jours</option>
+              <option value="90">3 derniers mois</option>
+              <option value="365">Cette année</option>
+            </select>
+          </div>
+        </div>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Montant minimum (TND)</label>
+            <input type="number" [(ngModel)]="smartFilters.minAmount" placeholder="0">
+          </div>
+          <div class="filter-group">
+            <label>Montant maximum (TND)</label>
+            <input type="number" [(ngModel)]="smartFilters.maxAmount" placeholder="∞">
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-section">
+        <h4>Filtres avancés</h4>
+        <div class="filter-row">
+          <div class="filter-group">
+            <label>Progression de remboursement</label>
+            <select [(ngModel)]="smartFilters.progress">
+              <option value="">Toutes</option>
+              <option value="0-25">0-25%</option>
+              <option value="25-50">25-50%</option>
+              <option value="50-75">50-75%</option>
+              <option value="75-100">75-100%</option>
+              <option value="100">100% (Terminé)</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Motif de demande</label>
+            <select [(ngModel)]="smartFilters.reason">
+              <option value="">Tous les motifs</option>
+              <option value="Urgent">Urgent</option>
+              <option value="Personnel">Personnel</option>
+              <option value="Professionnel">Professionnel</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <h4>Suggestions intelligentes</h4>
+        <div class="smart-suggestions">
+          <button class="suggestion-btn" (click)="applySuggestion('recent')">
+            <i antIcon type="clock" theme="outline"></i>
+            Demandes récentes
+          </button>
+          <button class="suggestion-btn" (click)="applySuggestion('high-amount')">
+            <i antIcon type="rise" theme="outline"></i>
+            Montants élevés
+          </button>
+          <button class="suggestion-btn" (click)="applySuggestion('pending')">
+            <i antIcon type="clock" theme="outline"></i>
+            En attente
+          </button>
+          <button class="suggestion-btn" (click)="applySuggestion('completed')">
+            <i antIcon type="check-circle" theme="outline"></i>
+            Terminées
+          </button>
+        </div>
+      </div>
+
+      <div class="filters-actions">
+        <button class="reset-btn" (click)="resetFilters()">
+          <i antIcon type="reload" theme="outline"></i>
+          Réinitialiser
+        </button>
+        <button class="apply-btn" (click)="applySmartFilters()">
+          <i antIcon type="check" theme="outline"></i>
+          Appliquer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Message de succès pour les filtres -->
+<div class="success-message" *ngIf="showSuccessMessage" [ngClass]="{'error-message': isErrorMessage}">
+  <div class="success-content" [ngClass]="{'error-content': isErrorMessage}">
+    <i antIcon [type]="isErrorMessage ? 'close-circle' : 'check-circle'" theme="outline"></i>
+    <span>{{ successMessage }}</span>
+  </div>
+</div>
+
+
   

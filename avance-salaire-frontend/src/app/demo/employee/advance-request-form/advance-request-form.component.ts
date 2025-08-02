@@ -20,6 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { BreadcrumbComponent, BreadcrumbItem } from 'src/app/theme/shared/components/breadcrumb/breadcrumb.component';
 
 @Component({
   selector: 'app-advance-request-form',
@@ -40,7 +41,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatButtonModule,
     MatIconModule,
     MatFormFieldModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    BreadcrumbComponent
   ],
   providers: [DatePipe]
 })
@@ -84,6 +86,11 @@ export class AdvanceRequestFormComponent implements OnInit, AfterViewInit {
 
   formattedMinDate: string = '';
   formattedMaxDate: string = '';
+
+  breadcrumbs: BreadcrumbItem[] = [
+    { label: 'Accueil', route: '/employee/employee-home' },
+    { label: 'Demander une avance', active: true }
+  ];
 
   @ViewChild('stepper') stepper!: MatStepper;
   @ViewChild('stepper', { read: ElementRef }) stepperRef!: ElementRef;

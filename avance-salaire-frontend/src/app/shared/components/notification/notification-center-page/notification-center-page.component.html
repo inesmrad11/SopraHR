@@ -1,0 +1,218 @@
+<app-breadcrumb [breadcrumbItems]="breadcrumbs"></app-breadcrumb>
+
+<!-- Dashboard moderne avec design harmonisé -->
+<div class="light-dashboard">
+  <!-- Header avec style identique à hr-requests -->
+  <div class="welcome-banner">
+    <div class="welcome-banner-overlay"></div>
+    <div class="welcome-banner-content">
+      <div class="welcome-banner-text">
+        <div class="welcome-greeting">Centre de Notifications</div>
+        <div class="welcome-description">Gérez et suivez toutes vos notifications en temps réel.</div>
+      </div>
+      <div class="welcome-banner-actions">
+        <div class="search-container">
+          <button class="action-btn search-btn" (click)="toggleSearch()" *ngIf="!showSearch">
+            <i antIcon type="search" theme="outline"></i>
+          </button>
+          <div class="inline-search" *ngIf="showSearch">
+            <div class="search-input-wrapper">
+              <i antIcon type="search" theme="outline"></i>
+              <input 
+                type="text" 
+                placeholder="Rechercher des notifications..." 
+                [(ngModel)]="search"
+                (input)="applyFilters()"
+                class="inline-search-input"
+                autofocus
+              >
+              <button class="close-inline-search" (click)="closeSearch()">
+                <i antIcon type="close" theme="outline"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section des notifications -->
+  <div class="notifications-section">
+    <div class="notifications-header">
+      <div class="notifications-title">
+        <h3>Notifications</h3>
+      </div>
+      <div class="notifications-actions">
+        <button class="action-btn mark-all-btn" (click)="markAllAsRead()">
+          <i antIcon type="check" theme="outline"></i>
+          <span>Tout marquer comme lu</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtres avancés -->
+    <div class="filters-section">
+      <div class="filters-container">
+        <div class="filter-group">
+          <label for="typeFilter">Type :</label>
+          <select 
+            id="typeFilter" 
+            [(ngModel)]="typeFilter" 
+            (ngModelChange)="setTypeFilter($event)"
+            class="filter-select">
+            <option value="">Tous les types</option>
+            <option value="INFO">Information</option>
+            <option value="WARNING">Avertissement</option>
+            <option value="ERROR">Erreur</option>
+            <option value="POSITIVE_FEEDBACK">Succès</option>
+            <option value="ACTION_REMINDER">Rappel</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="onlyUnread" [(ngModel)]="onlyUnread" (change)="setOnlyUnread($event)">
+            <label for="onlyUnread">Non lues uniquement</label>
+          </div>
+        </div>
+        <div class="filter-group">
+          <div class="checkbox-wrapper">
+            <input type="checkbox" id="selectAll" [checked]="allSelected()" (change)="toggleSelectAll($event)">
+            <label for="selectAll">Sélectionner tout</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bulk actions -->
+    <div class="bulk-actions" [class.active]="selectedNotifications.size > 0">
+      <div class="bulk-actions-text">
+        <span>{{ selectedNotifications.size }}</span> notification(s) sélectionnée(s)
+      </div>
+      <button class="btn-primary" (click)="markSelectedAsRead()">
+        <i antIcon type="check" theme="outline"></i> Marquer comme lu
+      </button>
+      <button class="btn-icon" (click)="deleteSelected()">
+        <i antIcon type="delete" theme="outline"></i>
+      </button>
+      <button class="btn-icon" (click)="clearSelection()">
+        <i antIcon type="close" theme="outline"></i>
+      </button>
+    </div>
+
+    <!-- Liste des notifications -->
+    <div class="notifications-list">
+    <div *ngIf="filtered.length === 0" class="notif-empty">
+      <i antIcon type="bell" theme="outline"></i>
+      <h3>Aucune notification</h3>
+      <p>Aucune notification ne correspond à vos critères de recherche.</p>
+    </div>
+    <div *ngFor="let notif of filtered | slice:(page-1)*pageSize:(page)*pageSize" class="notif-row" [class.unread]="!notif.read">
+      <input type="checkbox" class="notif-checkbox" [checked]="selectedNotifications.has(notif.id)" (change)="handleNotificationSelect(notif.id, $event)" style="margin-right: 1rem;">
+      <div class="notif-main">
+        <div class="notif-avatar" [ngClass]="notif.senderType?.toLowerCase()">
+          <ng-container *ngIf="notif.senderProfilePicture; else initials">
+            <img [src]="notif.senderProfilePicture" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />
+          </ng-container>
+          <ng-template #initials>
+            <ng-container [ngSwitch]="notif.senderType">
+              <span *ngSwitchCase="'SYSTEM'">S</span>
+              <span *ngSwitchCase="'RH'">RH</span>
+              <span *ngSwitchCase="'EMPLOYEE'">{{ getInitials(notif.senderName || 'Employé') }}</span>
+              <span *ngSwitchDefault>{{ getInitials(notif.senderName || 'Système') }}</span>
+            </ng-container>
+          </ng-template>
+          <span class="notif-type-circle" [ngClass]="getTypeClass(notif.type)"></span>
+        </div>
+        <div class="notif-content">
+          <div class="notif-title">{{ notif.title }}</div>
+          <div class="notif-message">{{ notif.message }}</div>
+          <div class="notif-meta">
+            <span><i antIcon type="user" theme="outline"></i> {{ notif.senderName || 'Système' }}</span>
+            <span><i antIcon type="clock-circle" theme="outline"></i> {{ notif.createdAt | date:'short' }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="notif-actions">
+        <button class="btn-primary" *ngIf="!notif.read" (click)="markAsRead(notif)">
+          <i antIcon type="check" theme="outline"></i> Marquer comme lu
+        </button>
+        <button class="btn-icon" (click)="showDetails(notif)">
+          <i antIcon type="info-circle" theme="outline"></i>
+        </button>
+        <button class="btn-icon" (click)="deleteNotification(notif)">
+          <i antIcon type="delete" theme="outline"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+    <!-- Pagination -->
+    <div *ngIf="filtered.length > 0" class="pagination-section">
+      <div class="pagination-left">
+        <span class="pagination-info">{{ paginationInfo }}</span>
+        <div class="items-per-page">
+          <label>Afficher:</label>
+          <select 
+            [(ngModel)]="pageSize" 
+            (change)="onItemsPerPageChange()"
+            class="items-per-page-select">
+            <option *ngFor="let option of itemsPerPageOptions" [value]="option">
+              {{ option }} éléments
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="pagination-controls">
+        <button 
+          class="pagination-btn"
+          (click)="previousPage()"
+          [disabled]="page === 1">
+          <i antIcon type="left" theme="outline"></i>
+        </button>
+        <span class="page-info">{{ page }} / {{ getTotalPages() }}</span>
+        <button 
+          class="pagination-btn"
+          (click)="nextPage()"
+          [disabled]="page === getTotalPages()">
+          <i antIcon type="right" theme="outline"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal détails notification -->
+<div class="modal-backdrop" *ngIf="modalNotif" (click)="closeDetailsModal()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">{{ modalNotif.title }}</h3>
+      <button class="modal-close" (click)="closeDetailsModal()" aria-label="Fermer">
+        <i antIcon type="close" theme="outline"></i>
+      </button>
+    </div>
+    
+    <div class="modal-body">
+      <p class="notification-message">{{ modalNotif.message }}</p>
+      
+      <div class="notification-meta">
+        <span class="meta-item">
+          <i antIcon type="user" theme="outline"></i>
+          {{ modalNotif.senderName || 'Système' }}
+        </span>
+        <span class="meta-item">
+          <i antIcon type="clock-circle" theme="outline"></i>
+          {{ modalNotif.createdAt | date:'short' }}
+        </span>
+      </div>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-primary" *ngIf="!modalNotif.read" (click)="markAsRead(modalNotif); closeDetailsModal()">
+        <i antIcon type="check" theme="outline"></i> Marquer comme lu
+      </button>
+      <button class="btn btn-secondary" (click)="closeDetailsModal()">
+        Fermer
+      </button>
+    </div>
+  </div>
+</div>

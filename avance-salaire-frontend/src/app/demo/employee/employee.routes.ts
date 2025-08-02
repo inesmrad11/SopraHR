@@ -24,6 +24,6 @@ export const routes: Routes = [
   },
   {
     path: 'notifications',
-    loadComponent: () => import('src/app/shared/components/notification/notification-center-page.component').then(m => m.NotificationCenterPageComponent)
+    loadComponent: () => import('src/app/shared/components/notification/notification-center-page/notification-center-page.component').then(m => m.NotificationCenterPageComponent)
   }
 ];

@@ -26,8 +26,9 @@
       <div>Plafond disponible : <b>{{ availableCeiling | number:'1.2-2' }} TND</b></div>
     </div>
     <div class="history-section">
-      <app-snake-timeline [activities]="mockActivities"></app-snake-timeline>
+      <app-snake-timeline [activities]="activities"></app-snake-timeline>
     </div>
+    <app-comment-thread [requestId]="request.id" [currentUser]="currentUser"></app-comment-thread>
     <div class="actions-row">
       <button class="btn btn-primary" (click)="onApprove()" [disabled]="request.status !== RequestStatus.PENDING">Valider</button>
       <button class="btn btn-secondary" (click)="onReject()" [disabled]="request.status !== RequestStatus.PENDING">Rejeter</button>

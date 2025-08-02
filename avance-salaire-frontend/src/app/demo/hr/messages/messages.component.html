@@ -1,0 +1,363 @@
+<!-- Header Section -->
+<div class="messages-header-section">
+  <div class="messages-header-content">
+    <div class="messages-header-text">
+      <div class="messages-header-title">Messagerie RH</div>
+      <div class="messages-header-subtitle">Gérez les communications avec les employés</div>
+    </div>
+    <div class="messages-header-actions">
+      <button class="refresh-btn" (click)="refreshMessages()" title="Actualiser">
+        <i antIcon type="reload" theme="outline"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main Messages Container -->
+<div class="messages-container">
+  <!-- Liste des conversations -->
+  <div class="conversations-list" [ngClass]="{'collapsed': !showConversations}">
+    <div class="conversations-header">
+      <h3>Conversations</h3>
+      <div class="search-box">
+        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (input)="filterConversations()" 
+          placeholder="Rechercher des conversations..."
+          class="search-input"
+        >
+      </div>
+    </div>
+
+    <div class="conversations-scroll-container">
+      <div *ngFor="let conv of filteredConversations" 
+           class="conversation-item" 
+           [ngClass]="{'selected': conv.isSelected, 'unread': conv.unreadCount > 0}"
+           (click)="selectConversation(conv)">
+        <div class="avatar-container">
+          <img [src]="getAvatarUrl(conv.employeeEmail, conv.employeeName, conv.employeeProfilePicture)" 
+               (error)="onImageError($event)" 
+               alt="Photo de profil">
+                      <!-- Petit cercle de statut supprimé -->
+        </div>
+        <div class="conversation-info">
+          <div class="employee-name">
+            {{ conv.employeeName }}
+          </div>
+          <div class="request-details">
+            <span class="amount">{{ formatAmount(conv.requestAmount) }}</span>
+            <span class="status" [style.color]="getStatusColor(conv.requestStatus)">
+              {{ getStatusText(conv.requestStatus) }}
+            </span>
+          </div>
+          <div class="last-message" *ngIf="conv.lastMessage">
+            {{ (conv.lastMessage.length > 25) ? (conv.lastMessage | slice:0:25) + '...' : conv.lastMessage }}
+          </div>
+        </div>
+        <div class="message-meta">
+          <div class="message-time" *ngIf="conv.lastMessageTime">
+            {{ formatMessageTime(conv.lastMessageTime) }}
+          </div>
+          <div class="unread-badge" *ngIf="conv.unreadCount > 0">
+            {{ conv.unreadCount }}
+          </div>
+        </div>
+      </div>
+      <div *ngIf="filteredConversations.length === 0" class="no-conversations">
+        <svg class="no-conversations-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        </svg>
+        <p>Aucune conversation trouvée.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fenêtre de chat -->
+  <div class="chat-window" [ngClass]="{'full-width': !showConversations}">
+    <div *ngIf="selectedConversation" class="chat-container">
+      <div class="chat-header">
+        <div class="employee-profile">
+          <img [src]="getAvatarUrl(selectedConversation.employeeEmail, selectedConversation.employeeName, selectedConversation.employeeProfilePicture)" 
+               (error)="onImageError($event)" 
+               alt="Photo de profil">
+          <div class="header-info">
+            <div class="header-name">{{ selectedConversation.employeeName }}</div>
+            <div class="header-details">
+              <span class="amount">{{ formatAmount(selectedConversation.requestAmount) }}</span>
+              <span class="status" [style.color]="getStatusColor(selectedConversation.requestStatus)">
+                {{ getStatusText(selectedConversation.requestStatus) }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="action-btn" title="Masquer/Afficher les conversations" (click)="toggleConversations()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 6h18M3 12h18M3 18h18"/>
+            </svg>
+          </button>
+
+          <button class="action-btn" title="Informations" (click)="showRequestInfo(selectedConversation)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4"/>
+              <path d="M12 8h.01"/>
+            </svg>
+          </button>
+          <button class="action-btn" title="Fermer la conversation" (click)="closeChat()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6 6 18"/>
+              <path d="m6 6 12 12"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="chat-messages" #messageContainer>
+        <div class="messages-scroll-area">
+          <div class="date-separator" *ngIf="messages.length > 0">
+            {{ messages[0].createdAt | date:'mediumDate' }}
+          </div>
+
+          <div *ngFor="let msg of messages; let i = index">
+            <!-- Séparateur de date quand le jour change -->
+            <div class="date-separator" *ngIf="i > 0 && showDateSeparator(messages[i-1], msg)">
+              {{ msg.createdAt | date:'mediumDate' }}
+            </div>
+
+            <div class="message-wrapper" [ngClass]="{'from-employee': msg.type === 'EMPLOYE', 'from-rh': msg.type === 'RH'}">
+              <!-- Avatar pour les messages de l'employé -->
+              <div class="message-avatar" *ngIf="msg.type === 'EMPLOYE'">
+                <img [src]="getAvatarUrl(selectedConversation.employeeEmail, selectedConversation.employeeName, selectedConversation.employeeProfilePicture)" 
+                     (error)="onImageError($event)" 
+                     alt="Avatar employé">
+              </div>
+              
+              <div class="message-bubble">
+                <div class="message-header">
+                  <span class="author-name">{{ msg.authorName }}</span>
+                  <span class="author-role">({{ msg.authorRole | roleTranslate }})</span>
+                </div>
+                <div class="message-content">
+                  <div [innerHTML]="formatMessageContent(msg.message)"></div>
+                </div>
+                <div class="message-footer">
+                  <span class="timestamp">{{ formatMessageTime(msg.createdAt) }}</span>
+                  <span class="read-status" *ngIf="msg.type === 'RH'">
+                    <svg class="read-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20,6 9,17 4,12"/>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+              
+              <!-- Avatar pour les messages du RH -->
+              <div class="message-avatar" *ngIf="msg.type === 'RH'">
+                <img [src]="getAvatarUrl(currentUser?.email || '', currentUser?.firstName + ' ' + currentUser?.lastName, currentUser?.profilePicture)" 
+                     (error)="onImageError($event)" 
+                     alt="Avatar RH">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chat-input">
+
+          <div class="emoji-button-container" *ngIf="!showInfoPopup">
+            <button class="input-action" title="Émojis" (click)="showEmojis()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                <line x1="9" y1="9" x2="9.01" y2="9"/>
+                <line x1="15" y1="9" x2="15.01" y2="9"/>
+              </svg>
+            </button>
+            
+            <!-- Sélecteur d'émojis -->
+            <div class="emoji-picker" *ngIf="showEmojiPicker && !showInfoPopup">
+              <div class="emoji-picker-header">
+                <span>Émojis</span>
+                <button class="close-emoji-btn" (click)="showEmojis()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="emoji-grid">
+                <button 
+                  *ngFor="let emoji of emojis" 
+                  class="emoji-btn" 
+                  (click)="addEmoji(emoji)"
+                  [title]="emoji">
+                  {{ emoji }}
+                </button>
+              </div>
+            </div>
+          </div>
+        <div class="message-input-container" *ngIf="!showInfoPopup">
+          <textarea 
+            [(ngModel)]="newMessage" 
+            placeholder="Tapez votre message..." 
+            (keydown.enter)="onEnterKey($event)"
+            (input)="autoResize($event)"
+            rows="1"
+            class="message-input"
+            #messageInput>
+          </textarea>
+        </div>
+        <button class="send-btn" *ngIf="!showInfoPopup" (click)="sendMessage()" [disabled]="!newMessage.trim()" title="Envoyer le message">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m22 2-7 20-4-9-9-4 20-7z"/>
+            <path d="M22 2 11 13"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- État vide -->
+      <div class="empty-state" *ngIf="!selectedConversation">
+        <div class="empty-illustration">
+          <svg class="empty-icon" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <h3>Sélectionnez une conversation</h3>
+        <p>Choisissez une demande d'avance de salaire pour commencer à discuter</p>
+        <button class="browse-btn" (click)="showConversations = true" *ngIf="!showConversations">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M3 12h18M3 18h18"/>
+          </svg>
+          Voir les conversations
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Popup d'informations employé -->
+<div class="info-popup-overlay" *ngIf="showInfoPopup" (click)="closeInfoPopup()">
+  <div class="info-popup" (click)="$event.stopPropagation()">
+    <div class="info-popup-header">
+      <h3>Informations employé</h3>
+      <button class="close-popup-btn" (click)="closeInfoPopup()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18"/>
+          <path d="m6 6 12 12"/>
+        </svg>
+      </button>
+    </div>
+    
+    <div class="info-popup-content" *ngIf="selectedEmployeeInfo">
+      <div class="employee-profile-section">
+        <img [src]="getAvatarUrl(selectedEmployeeInfo.email, selectedEmployeeInfo.name, null)" 
+             (error)="onImageError($event)" 
+             alt="Photo de profil"
+             class="employee-avatar">
+        <div class="employee-details">
+          <h4>{{ selectedEmployeeInfo.name }}</h4>
+          <p class="employee-email">{{ selectedEmployeeInfo.email }}</p>
+          <p class="employee-position">{{ selectedEmployeeInfo.position }}</p>
+          <p class="employee-department">{{ selectedEmployeeInfo.department }}</p>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h5>Informations générales</h5>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Date d'embauche:</span>
+            <span class="info-value">{{ selectedEmployeeInfo.hireDate | date:'mediumDate' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Salaire annuel:</span>
+            <span class="info-value">{{ formatAmount(selectedEmployeeInfo.salary) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h5>Demande d'avance</h5>
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Montant demandé:</span>
+            <span class="info-value amount">{{ formatAmount(selectedEmployeeInfo.requestAmount) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Statut:</span>
+            <span class="info-value status" [style.color]="getStatusColor(selectedEmployeeInfo.requestStatus)">
+              {{ getStatusText(selectedEmployeeInfo.requestStatus) }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Date de demande:</span>
+            <span class="info-value">{{ selectedEmployeeInfo.requestDate | date:'mediumDate' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Motif:</span>
+            <span class="info-value">{{ selectedEmployeeInfo.reason }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-section" *ngIf="selectedEmployeeInfo.documents?.length">
+        <h5>Documents fournis</h5>
+        <div class="documents-list">
+          <div class="document-item" *ngFor="let doc of selectedEmployeeInfo.documents">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+            </svg>
+            <span>{{ doc }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Message d'incitation quand aucune conversation n'est sélectionnée -->
+    <div *ngIf="!selectedConversation" class="empty-chat-state">
+      <div class="empty-chat-content">
+        <div class="empty-chat-icon">
+          <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            <path d="M8 9h8"/>
+            <path d="M8 13h6"/>
+          </svg>
+        </div>
+        <h3 class="empty-chat-title">Bienvenue dans votre messagerie RH</h3>
+        <p class="empty-chat-subtitle">
+          Sélectionnez une conversation dans la liste pour commencer à échanger avec vos employés.
+        </p>
+        <div class="empty-chat-features">
+          <div class="feature-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+            <span>Gérez les demandes d'avance de salaire</span>
+          </div>
+          <div class="feature-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+            <span>Communiquez en temps réel avec vos équipes</span>
+          </div>
+          <div class="feature-item">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+            <span>Suivez l'historique des échanges</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+ 

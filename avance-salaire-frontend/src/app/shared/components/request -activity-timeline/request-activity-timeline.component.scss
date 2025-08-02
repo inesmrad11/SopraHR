@@ -1,0 +1,376 @@
+// Main content wrapper
+.timeline-content {
+  width: 100%;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: visible; // Changed from hidden to visible
+  min-height: auto; // Allow natural height
+  height: auto; // Allow natural height
+}
+
+// Progress section
+.progress-section {
+  padding: 1.5rem 2rem 1.5rem 2rem;
+
+  .progress-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.6);
+  }
+
+  .progress-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #000;
+  }
+
+  .progress-container {
+    height: 0.5rem;
+    width: 100%;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+  }
+
+  .progress-bar-custom {
+    height: 100%;
+    background: linear-gradient(to right, #8b5cf6, #f97316);
+    transition: width 0.7s ease;
+    border-radius: 9999px;
+  }
+
+  .legend-container {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    font-size: 0.75rem;
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .legend-dot {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+
+      &.completed {
+        background: #f97316;
+      }
+
+      &.in-progress {
+        background: #8b5cf6;
+      }
+
+      &.pending {
+        background: rgba(0, 0, 0, 0.3);
+      }
+    }
+  }
+}
+
+// Timeline section
+.timeline-section {
+  position: relative;
+  padding-left: 3rem;
+  padding-right: 2rem;
+  padding-bottom: 3rem;
+  min-height: auto; // Allow natural height
+  height: auto; // Allow natural height
+
+  .timeline-line {
+    position: absolute;
+    left: 1.5rem;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, #c4b5fd, #fdba74, #fed7aa);
+  }
+
+  .timeline-step {
+    position: relative;
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 2.5rem;
+    opacity: 0;
+    animation: fadeIn 0.4s ease-out forwards;
+    min-height: auto; // Allow natural height
+
+    &:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: -1.4375rem;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      border-radius: 50%;
+      transition: all 0.3s ease;
+
+      &.completed {
+        background: #f97316;
+      }
+
+      &.active {
+        background: #8b5cf6;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      &.pending {
+        background: rgba(0, 0, 0, 0.3);
+      }
+
+      .dot-icon {
+        font-size: 0.75rem;
+        color: white;
+        stroke-width: 2;
+
+        &.spinning {
+          animation: spin 1s linear infinite;
+        }
+      }
+    }
+
+    .timeline-card {
+      flex: 1;
+      background: white;
+      border-radius: 0.5rem;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      padding: 1rem;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+      transition: box-shadow 0.15s ease;
+      min-height: auto; // Allow natural height
+
+      &:hover {
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      .card-actor {
+        font-size: 0.875rem;
+        font-weight: 600;
+        margin: 0;
+        color: #1f2937;
+
+        .actor-role {
+          font-size: 0.75rem;
+          color: rgba(0, 0, 0, 0.6);
+          margin-left: 0.25rem;
+        }
+      }
+
+      .card-timestamp {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+
+      .card-action {
+        font-size: 0.875rem;
+        color: rgba(0, 0, 0, 0.7);
+        margin: 0.25rem 0 0 0;
+      }
+
+      .card-details {
+        margin-top: 0.5rem;
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.5);
+
+        .detail-item {
+          display: flex;
+          align-items: flex-start;
+          gap: 0.25rem;
+          margin-bottom: 0.25rem;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .detail-icon {
+            font-size: 0.75rem;
+            margin-top: 0.125rem;
+            flex-shrink: 0;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Summary section
+.timeline-summary {
+  background: #fff7ed;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+
+  .summary-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    letter-spacing: -0.025em;
+    color: #1f2937;
+  }
+
+  .summary-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    text-align: center;
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+
+      .stat-number {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #8b5cf6;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: rgba(0, 0, 0, 0.6);
+      }
+    }
+  }
+}
+
+// Empty state
+.timeline-empty {
+  width: 100%;
+  background: white;
+  border-radius: 0.75rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 2rem;
+  text-align: center;
+
+  .empty-icon {
+    font-size: 3rem;
+    color: #9ca3af;
+    margin: 0 auto 1rem auto;
+    display: block;
+  }
+
+  .empty-text {
+    color: #6b7280;
+    margin: 0;
+  }
+}
+
+// Animations
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Responsive design
+@media (max-width: 640px) {
+  .progress-section {
+    padding: 1rem 1.5rem 1rem 1.5rem;
+  }
+
+  .timeline-section {
+    padding-left: 2rem;
+    padding-right: 1.5rem;
+  }
+
+  .timeline-summary {
+    padding: 1rem 1.5rem;
+  }
+
+  .summary-stats {
+    gap: 1rem !important;
+  }
+}
+
+// Ensure proper spacing for Bootstrap gap utility
+.gap-3 {
+  gap: 0.75rem !important;
+}
+
+// Custom scrollbar for better UX
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.timeline-dot.rh-dot .dot-rh {
+  display: block;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: #8b5cf6;
+  border: 3px solid #ede9fe;
+  box-shadow: 0 0 0 2px #ede9fe;
+  margin: 0 auto;
+}
+
+.timeline-dot.rh-dot-active .dot-rh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 50%;
+  background: #8b5cf6;
+  border: 3px solid #ede9fe;
+  box-shadow: 0 0 0 2px #ede9fe;
+  margin: 0 auto;
+}
+
+.timeline-dot.rh-dot-active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+// Pour éviter le dot violet sur RH si non actif
+.timeline-dot.rh-dot,
+.timeline-dot.rh-dot-pending {
+  background: #e5e7eb !important;
+  box-shadow: none !important;
+} 

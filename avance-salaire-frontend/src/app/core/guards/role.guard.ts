@@ -23,7 +23,7 @@ export const RoleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   
   if (!hasRequiredRole) {
     // Redirect to appropriate dashboard based on user role
-    if (currentUser.role === 'ADMIN' || currentUser.role === 'HR_EXPERT') {
+    if (currentUser.role === 'HR_EXPERT') {
       router.navigate(['/hr/dashboard']);
     } else {
       router.navigate(['/employee/dashboard']);

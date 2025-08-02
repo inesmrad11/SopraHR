@@ -1,0 +1,98 @@
+<div class="timeline-content" *ngIf="activities && activities.length > 0; else noActivity">
+  
+  <!-- PROGRESS BAR -->
+  <section class="progress-section">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span class="progress-label">Progression</span>
+      <span class="progress-text">{{ getCompletionPercentage() }}% terminé</span>
+    </div>
+    <div class="progress-container">
+      <div class="progress-bar-custom" [style.width.%]="getCompletionPercentage()"></div>
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend-container">
+      <div class="legend-item">
+        <span class="legend-dot completed"></span> Terminé
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot in-progress"></span> En cours
+      </div>
+      <div class="legend-item">
+        <span class="legend-dot pending"></span> En attente
+      </div>
+    </div>
+  </section>
+
+  <!-- VERTICAL TIMELINE -->
+  <section class="timeline-section">
+    <!-- LINE -->
+    <div class="timeline-line"></div>
+
+    <!-- TIMELINE STEPS -->
+    <div *ngFor="let activity of activities; let i = index" 
+         class="timeline-step"
+         [class.animate-fade-in]="true"
+         [style.animation-delay]="(i * 100) + 'ms'">
+      
+      <!-- Dot -->
+      <div class="timeline-dot"
+        [ngClass]="{
+          'completed': isStepCompleted(i),
+          'active': isStepActive(i) && !(activity.actorRole === 'HR_EXPERT' || activity.actorRole === 'RH'),
+          'pending': isStepPending(i),
+          'rh-dot-active': isStepActive(i) && (activity.actorRole === 'HR_EXPERT' || activity.actorRole === 'RH')
+        }">
+        <!-- Dot pour RH en cours -->
+        <ng-container *ngIf="isStepActive(i) && (activity.actorRole === 'HR_EXPERT' || activity.actorRole === 'RH'); else notRhActive">
+          <span class="dot-rh">
+            <i antIcon type="loading" theme="outline" class="dot-icon spinning"></i>
+          </span>
+        </ng-container>
+        <ng-template #notRhActive>
+          <!-- Spinner pour étape active (hors RH) -->
+          <i *ngIf="isStepActive(i) && !(activity.actorRole === 'HR_EXPERT' || activity.actorRole === 'RH')" antIcon type="loading" theme="outline" class="dot-icon spinning"></i>
+          <!-- Check pour terminé -->
+          <i *ngIf="isStepCompleted(i)" antIcon type="check" theme="outline" class="dot-icon"></i>
+          <!-- Clock pour en attente -->
+          <i *ngIf="isStepPending(i)" antIcon type="clock" theme="outline" class="dot-icon"></i>
+        </ng-template>
+      </div>
+      
+      <!-- Card -->
+      <div class="timeline-card">
+        <div class="d-flex justify-content-between align-items-center">
+          <p class="card-actor">
+            {{ activity.actor }}
+            <span *ngIf="activity.actorRole" class="actor-role">({{ activity.actorRole | roleTranslate }})</span>
+          </p>
+          <span class="card-timestamp">
+            <span *ngIf="isStepCompleted(i) || isStepActive(i)">{{ activity.timestamp | date:'dd/MM/yyyy • HH:mm' }}</span>
+            <span *ngIf="isStepActive(i)">En cours</span>
+            <span *ngIf="isStepPending(i)">À venir</span>
+          </span>
+        </div>
+        <p class="card-action">{{ getActionLabel(activity.type) }}</p>
+        
+        <!-- Additional details -->
+        <div *ngIf="activity.comment || activity.details" class="card-details">
+          <div *ngIf="activity.comment" class="detail-item">
+            <i antIcon type="message" theme="outline" class="detail-icon"></i>
+            <span>"{{ activity.comment }}"</span>
+          </div>
+          <div *ngIf="activity.details" class="detail-item">
+            <i antIcon type="info-circle" theme="outline" class="detail-icon"></i>
+            <span>{{ activity.details }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<ng-template #noActivity>
+  <div class="timeline-empty">
+    <i antIcon type="info-circle" theme="outline" class="empty-icon"></i>
+    <p class="empty-text">Aucune activité pour cette demande.</p>
+  </div>
+</ng-template> 

@@ -9,12 +9,11 @@ import { NavBarComponent } from './nav-bar/nav-bar.component';
 import { NavigationComponent } from './navigation/navigation.component';
 import { BreadcrumbComponent } from 'src/app/theme/shared/components/breadcrumb/breadcrumb.component';
 import { SpinnerComponent } from 'src/app/theme/shared/components/spinner/spinner.component';
-import { NotificationTestSenderComponent } from 'src/app/shared/components/notification/notification-test-sender.component';
 
 @Component({
   selector: 'app-hr-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, NavBarComponent, NavigationComponent, BreadcrumbComponent, SpinnerComponent, NotificationTestSenderComponent],
+  imports: [CommonModule, RouterModule, NavBarComponent, NavigationComponent, BreadcrumbComponent, SpinnerComponent],
   templateUrl: './hr-layout.component.html',
   styleUrls: ['./hr-layout.component.scss'],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

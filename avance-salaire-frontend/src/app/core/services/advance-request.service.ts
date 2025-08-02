@@ -192,6 +192,30 @@ export class AdvanceRequestService {
     }).pipe(delay(1000));
   }
 
+  getRequestHistory(requestId: number): Observable<any[]> {
+    return this.http.get<any[]>(`/api/advance-requests/${requestId}/history`);
+  }
+
+  getRequestById(id: number) {
+    return this.http.get<SalaryAdvanceRequest>(`/api/advance-requests/${id}`);
+  }
+
+  getRichTimeline(requestId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${requestId}/steps`);
+  }
+
+  getComments(requestId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/${requestId}/comments`);
+  }
+
+  addComment(requestId: number, comment: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${requestId}/comments`, comment);
+  }
+
+  getAllRequests(): Observable<SalaryAdvanceRequest[]> {
+    return this.http.get<SalaryAdvanceRequest[]>(`${this.apiUrl}`);
+  }
+
   private getStepLabel(status: RequestStatus): string {
     switch (status) {
       case RequestStatus.PENDING: return "Demande Soumise";

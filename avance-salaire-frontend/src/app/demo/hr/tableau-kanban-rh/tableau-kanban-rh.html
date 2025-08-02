@@ -1,71 +1,161 @@
-<div class="kanban-container">
-  <div class="kanban-header-section">
-    <h2 class="kanban-main-title">Tableau Kanban</h2>
-  </div>
+<app-breadcrumb [breadcrumbItems]="breadcrumbs"></app-breadcrumb>
 
-  <div class="kanban-board">
-    <div *ngFor="let col of columns; let i = index" class="kanban-column {{ col.key.toLowerCase() }}" [style.borderTopColor]="col.color">
-      <div class="kanban-header">{{ col.label }}</div>
-      <div class="kanban-header-sub">{{ col.requests.length }} demandes</div>
-      <div cdkDropList [cdkDropListData]="col.requests" [cdkDropListConnectedTo]="columnsKeys" class="kanban-list" (cdkDropListDropped)="drop($event, col.key)" [id]="col.key">
-        <div *ngFor="let req of col.requests" cdkDrag class="kanban-card" [style.borderLeftColor]="col.color">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div class="card-title">{{ req.employeeFullName }}</div>
-            <button class="action-eye" (click)="openDetails(req)" title="Voir les détails" type="button" aria-label="Voir les détails">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <ellipse cx="11" cy="11" rx="8.5" ry="6.5" stroke="currentColor" stroke-width="2"/>
-                <circle cx="11" cy="11" r="2.5" stroke="currentColor" stroke-width="2"/>
-              </svg>
-            </button>
-          </div>
-          <div class="card-meta">Montant : <b>{{ req.requestedAmount | number:'1.2-2' }} TND</b></div>
-          <div class="card-meta">Durée : <b>{{ req.repaymentMonths }} mois</b></div>
-          <div class="card-meta">Date : {{ req.requestDate | date:'shortDate' }}</div>
-        </div>
+<div class="kanban-main-container">
+  <!-- Header Section -->
+  <div class="kanban-header-section">
+    <div class="kanban-header-content">
+      <div class="kanban-header-text">
+        <div class="kanban-header-title">Kanban</div>
+        <div class="kanban-header-subtitle">Tableau de gestion des demandes d'avance</div>
+      </div>
+      <div class="kanban-header-actions">
+        <button class="refresh-btn" (click)="fetchRequests()" title="Actualiser">
+          <i antIcon type="reload" theme="outline"></i>
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- Toast notification -->
-  <div *ngIf="toast" class="kanban-toast-enhanced">
-    <span class="toast-icon" *ngIf="toast.includes('Confirmer')">&#9888;</span>
-    <span class="toast-icon" *ngIf="toast.includes('Statut mis à jour')">&#10003;</span>
-    <span [innerHTML]="safeToast"></span>
-  </div>
-  
-  <!-- Loading state -->
-  <div *ngIf="loading" class="kanban-loader">
-    <div class="loader-spinner"></div>
-    <div class="loader-text">Chargement des demandes...</div>
-  </div>
-  
-  <!-- Error state -->
-  <div *ngIf="error" class="kanban-error">
-    <div class="error-icon">⚠️</div>
-    <div class="error-message">{{ error }}</div>
-    <button class="retry-btn" (click)="fetchRequests()">Réessayer</button>
-  </div>
-
-  <!-- Modal détails pop-up -->
-  <div class="kanban-modal-backdrop" *ngIf="selectedRequest">
-    <div class="kanban-modal-popup" (click)="$event.stopPropagation()">
-      <span class="modal-close" (click)="closeDetailsModal()" aria-label="Fermer">&times;</span>
-      <h3 style="text-align:center; margin-bottom:1.5rem;">Détail de la demande</h3>
-      <div class="modal-details-grid">
-        <div><b>Salarié :</b> {{ selectedRequest.employeeFullName }}</div>
-        <div><b>Date :</b> {{ selectedRequest.requestDate | date:'shortDate' }}</div>
-        <div><b>Montant :</b> {{ selectedRequest.requestedAmount | number:'1.2-2' }} TND</div>
-        <div><b>Durée :</b> {{ selectedRequest.repaymentMonths || '?' }} mois</div>
-        <div><b>Statut :</b> <span class="status-text-lower">{{ getStatusLabel(selectedRequest.status) }}</span></div>
-        <div style="grid-column: 1 / -1;"><b>Raison :</b> {{ selectedRequest.reason || '—' }}</div>
-        <div style="grid-column: 1 / -1; margin-top:0.7rem; background:#f8f9fa; border-radius:6px; padding:0.5rem 0.7rem; font-size:0.85em; line-height:1.5; max-width:340px;">
-          <div><b>Salaire net :</b> {{ selectedRequest.employeeSalaryNet | number:'1.2-2' }} TND</div>
-          <div><b>Plafond disponible :</b> {{ selectedRequest.plafondDisponible | number:'1.2-2' }} TND</div>
-          <div><b>Avances non remboursées :</b> {{ selectedRequest.totalAvancesNonRemboursees | number:'1.2-2' }} TND</div>
+  <!-- Kanban Board Container -->
+  <div class="kanban-container">
+    <div class="kanban-board">
+      <div *ngFor="let col of columns; let i = index" 
+           class="kanban-column {{ col.key.toLowerCase() }}" 
+           [style.borderTopColor]="col.color">
+        
+        <div class="kanban-header">
+          <div class="column-title">{{ col.label }}</div>
+        </div>
+        <div class="kanban-header-sub">{{ col.requests.length }} demandes</div>
+        
+        <div cdkDropList 
+             [cdkDropListData]="col.requests" 
+             [cdkDropListConnectedTo]="columnsKeys" 
+             class="kanban-list" 
+             (cdkDropListDropped)="drop($event, col.key)" 
+             [id]="col.key">
+          
+          <div *ngFor="let req of col.requests" 
+               cdkDrag 
+               class="kanban-card" 
+               [style.borderLeftColor]="col.color">
+            
+            <ng-template cdkDragPreview></ng-template>
+            <div class="card-header">
+            <div class="card-title">{{ req.employeeFullName }}</div>
+              <button class="action-eye" 
+                      (click)="openDetails(req)" 
+                      title="Voir les détails" 
+                      type="button" 
+                      aria-label="Voir les détails">
+                …
+              </button>
+            </div>
+            
+            <div class="card-date kanban-date-violet">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                </path>
+              </svg>
+              {{ req.requestDate | date:'d MMM' }}
+            </div>
+            
+            
+            <div class="card-description">
+              <strong>Montant :</strong> {{ req.requestedAmount | number:'1.2-2' }} TND<br>
+              <strong>Durée :</strong> {{ req.repaymentMonths }} mois<br>
+              <strong>Motif :</strong> {{ req.reason || 'Non spécifié' }}
+            </div>
+          </div>
         </div>
       </div>
-      <div style="margin-top:1.2rem; text-align:center;">
-        <button (click)="closeDetailsModal()" style="padding:0.5rem 1.2rem; border-radius:6px; border:none; background:#a728a7; color:#fff; font-weight:600;">Fermer</button>
+    </div>
+
+    <!-- Toast notification -->
+    <div *ngIf="toast" class="kanban-toast-enhanced">
+      <span class="toast-icon" *ngIf="toast.includes('Confirmer')">⚠️</span>
+      <span class="toast-icon" *ngIf="toast.includes('Statut mis à jour')">✅</span>
+      <span [innerHTML]="safeToast"></span>
+    </div>
+    
+    <!-- Loading state -->
+    <div *ngIf="loading" class="kanban-loader">
+      <div class="loader-spinner"></div>
+      <div class="loader-text">Chargement des demandes...</div>
+    </div>
+    
+    <!-- Error state -->
+    <div *ngIf="error" class="kanban-error">
+      <div class="error-icon">⚠️</div>
+      <div class="error-message">{{ error }}</div>
+      <button class="retry-btn" (click)="fetchRequests()">Réessayer</button>
+    </div>
+
+    <!-- Modal détails pop-up -->
+    <div class="kanban-modal-backdrop" *ngIf="selectedRequest" (click)="closeDetailsModal()">
+      <div class="kanban-modal-popup" (click)="$event.stopPropagation()">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h3 class="modal-title">Détail de la demande</h3>
+          <button class="modal-close" (click)="closeDetailsModal()" aria-label="Fermer">
+            <i antIcon type="close" theme="outline"></i>
+          </button>
+        </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <div class="modal-content">
+            <div class="info-row">
+              <span class="info-label">Salarié</span>
+              <span class="info-value">{{ selectedRequest.employeeFullName }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Date de demande</span>
+              <span class="info-value">{{ selectedRequest.requestDate | date:'shortDate' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Montant demandé</span>
+              <span class="info-value">{{ selectedRequest.requestedAmount | number:'1.2-2' }} TND</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Durée de remboursement</span>
+              <span class="info-value">{{ selectedRequest.repaymentMonths }} mois</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Motif</span>
+              <span class="info-value">{{ selectedRequest.reason || 'Non spécifié' }}</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Statut</span>
+              <span class="status-badge" [class]="'status-' + selectedRequest.status.toLowerCase()">
+                {{ getStatusLabel(selectedRequest.status) }}
+              </span>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="info-row">
+              <span class="info-label">Salaire net</span>
+              <span class="info-value">{{ selectedRequest.employeeSalaryNet | number:'1.2-2' }} TND</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Plafond disponible</span>
+              <span class="info-value">{{ selectedRequest.plafondDisponible | number:'1.2-2' }} TND</span>
+            </div>
+            <div class="info-row">
+              <span class="info-label">Avances non remboursées</span>
+              <span class="info-value">{{ selectedRequest.totalAvancesNonRemboursees | number:'1.2-2' }} TND</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+          <button class="modal-btn" (click)="closeDetailsModal()">
+            Fermer
+          </button>
+        </div>
       </div>
     </div>
   </div>

@@ -5,7 +5,14 @@
   top: 0; left: 0; width: 100vw; height: 100vh;
   z-index: 0;
   overflow: hidden;
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+} 
+
+.auth-login-bg-video-wrapper.success-transition {
+  filter: brightness(2) blur(20px);
+  transform: scale(1.1);
 }
+
 .auth-login-bg-video {
   position: absolute;
   top: 0; left: 0; width: 100vw; height: 100vh;
@@ -15,14 +22,24 @@
   z-index: 0;
   filter: brightness(0.7);
 }
+
 .auth-login-content {
   position: relative;
   z-index: 2;
   min-height: 100vh;
+  height: 100vh; // Fixe la hauteur pour éviter le scroll
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
+  padding: 20px;
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden; // Empêche le scroll
+}
+
+.auth-login-content.success-fade {
+  opacity: 0;
+  transform: scale(0.95);
 }
 
 // Overlay for readability
@@ -32,6 +49,11 @@
   top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(50, 21, 74, 0.45);
   z-index: 1;
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.auth-login-bg-video-wrapper.success-transition::after {
+  background: rgba(255, 255, 255, 0.95);
 }
 
 // Style the login button
@@ -39,19 +61,31 @@ button, .btn, .auth-login-btn {
   background: #32154a !important;
   color: #fff !important;
   border: none;
-  border-radius: 6px;
-  padding: 12px 32px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  box-shadow: 0 4px 16px rgba(50,21,74,0.08);
-  transition: background 0.2s, box-shadow 0.2s;
+  border-radius: 4px;
+  padding: 14px 32px;
+  font-size: 1rem;
+  font-weight: 500;
+  box-shadow: 0 2px 8px rgba(50,21,74,0.15);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   margin-top: 18px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  min-height: 48px;
+  width: 100%;
 }
+
 button:hover, .btn:hover, .auth-login-btn:hover {
   background: #43216a !important;
-  box-shadow: 0 6px 24px rgba(50,21,74,0.18);
+  box-shadow: 0 4px 16px rgba(50,21,74,0.25);
+  transform: translateY(-1px);
+}
+
+button:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+  transform: none !important;
 }
 
 // Remove any previous background
@@ -59,46 +93,317 @@ button:hover, .btn:hover, .auth-login-btn:hover {
   background: none !important;
 }
 
-.auth-login-content .auth-main .auth-wrapper .auth-form .card {
-  box-shadow: 0 0 32px 0 rgba(255,255,255,0.55), 0 2px 16px 0 rgba(50,21,74,0.10);
-  border-radius: 18px;
-  border: none;
-  background: rgba(255,255,255,0.97);
-  /* Optional: add a slight blur for extra glow */
-  backdrop-filter: blur(2px);
-  margin-top: 90px;
+.auth-login-content .auth-main .auth-wrapper {
+  width: 100%;
+  max-width: 500px; // Plus large
+  margin: 0 auto;
 }
 
+.auth-login-content .auth-main .auth-wrapper .auth-form .card {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.08);
+  border-radius: 6px;
+  border: none;
+  background: rgba(255,255,255,0.98);
+  backdrop-filter: blur(10px);
+  margin: 0; // Pas de marge
+  width: 100%;
+  // Supprime l'effet de saut au hover, garde seulement la lumière
+  transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: slideInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+@keyframes slideInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Effet de lumière au hover sans saut
+.auth-login-content .auth-main .auth-wrapper .auth-form .card:hover {
+  box-shadow: 0 8px 40px rgba(255,255,255,0.3), 0 4px 16px rgba(50,21,74,0.15);
+}
+
+// Logo repositionné en haut à gauche
 .auth-login-logo {
   position: absolute;
-  top: 32px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 30px;
+  left: 30px; // Positionné à gauche
+  transform: none; // Supprime le centrage
   z-index: 10;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; // Aligné à gauche
   align-items: center;
-  width: 100%;
   pointer-events: none;
-  padding-bottom: 16px;
+  animation: logoFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1);
+  animation-delay: 0.3s;
+  animation-fill-mode: both;
 }
+
+@keyframes logoFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .auth-login-logo img {
-  max-height: 70px;
+  max-height: 50px;
   width: auto;
   display: block;
-  margin: 0 auto;
-  filter: drop-shadow(0 2px 12px rgba(50,21,74,0.10));
+  filter: drop-shadow(0 2px 8px rgba(50,21,74,0.15));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .auth-login-content .auth-header {
   display: none;
 }
 
-@media (max-width: 600px) {
+// Form animations
+.form-group {
+  animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  animation-fill-mode: both;
+}
+
+.form-group:nth-child(1) {
+  animation-delay: 0.4s;
+}
+
+.form-group:nth-child(2) {
+  animation-delay: 0.5s;
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Input focus effects
+.form-control {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid #e1e5e9;
+  border-radius: 4px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+}
+
+.form-control:focus {
+  border-color: #32154a;
+  box-shadow: 0 0 0 3px rgba(50, 21, 74, 0.1);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+// Success transition avec logo Sopra
+.success-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  opacity: 0;
+  transition: all 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(20px);
+}
+
+.success-overlay.show {
+  opacity: 1;
+}
+
+.success-logo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-logo {
+  width: 120px;
+  height: auto;
+  opacity: 0;
+  transform: scale(0.8);
+  animation: logoSuccessAnimation 1.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  filter: drop-shadow(0 4px 20px rgba(50,21,74,0.2));
+}
+
+@keyframes logoSuccessAnimation {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(20px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.1) translateY(-5px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.success-text {
+  margin-top: 20px;
+  text-align: center;
+  color: #32154a;
+  font-weight: 500;
+  font-size: 1.1rem;
+  opacity: 0;
+  animation: textFadeIn 1s cubic-bezier(0.4, 0, 0.2, 1) 0.8s both;
+}
+
+@keyframes textFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Animation d'erreur plus subtile
+@keyframes gentleShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+.card.shake {
+  animation: gentleShake 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Animation pour les alertes d'erreur
+.alert-danger {
+  animation: slideInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+  border-left: 3px solid #dc3545;
+  background: rgba(220, 53, 69, 0.08);
+  border-radius: 4px;
+  padding: 12px 16px;
+  color: #721c24;
+}
+
+@keyframes slideInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Labels et autres éléments
+.form-label {
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-body h3 {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.text-muted {
+  color: #6b7280 !important;
+}
+
+// Footer positionné en bas
+.auth-footer {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 30px;
+}
+
+.auth-footer p, .auth-footer a {
+  color: rgba(255,255,255,0.8) !important;
+  font-size: 0.9rem;
+}
+
+.auth-footer a:hover {
+  color: rgba(255,255,255,1) !important;
+}
+
+// Responsive design amélioré
+@media (max-width: 768px) {
+  .auth-login-logo {
+    top: 20px;
+    left: 20px;
+  }
+  
   .auth-login-logo img {
-    max-height: 48px;
+    max-height: 45px;
   }
-  .auth-login-content .auth-main .auth-wrapper .auth-form .card {
-    margin-top: 60px;
+  
+  .auth-login-content .auth-main .auth-wrapper {
+    max-width: 450px;
+    padding: 0 15px;
   }
+  
+  .success-logo {
+    width: 100px;
+  }
+  
+  .success-text {
+    font-size: 1rem;
+  }
+  
+  .auth-footer {
+    bottom: 15px;
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-login-content .auth-main .auth-wrapper {
+    max-width: 350px;
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  .auth-login-logo {
+    top: 15px;
+    left: 15px;
+  }
+  
+  .auth-login-logo img {
+    max-height: 40px;
+  }
+}
+
+// Supprime tout scroll sur le body
+body, html {
+  overflow-x: hidden;
+  height: 100vh;
 }

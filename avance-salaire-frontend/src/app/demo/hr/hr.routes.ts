@@ -16,7 +16,7 @@ export const routes: Routes = [
   },
   {
     path: 'history',
-    loadComponent: () => import('./request-history/request-history').then(m => m.RequestHistory)
+    loadComponent: () => import('./request-history/request-history').then(m => m.RequestHistoryComponent)
   },
   {
     path: 'requests',
@@ -27,11 +27,15 @@ export const routes: Routes = [
     loadComponent: () => import('./request-details/request-details').then(m => m.RequestDetails)
   },
   {
+    path: 'messages',
+    loadComponent: () => import('./messages/messages.component').then(m => m.MessagesComponent)
+  },
+  {
     path: 'analytics',
     loadComponent: () => import('./hr-statistics/hr-statistics').then(m => m.HrStatistics)
   },
   {
     path: 'notifications',
-    loadComponent: () => import('src/app/shared/components/notification/notification-center-page.component').then(m => m.NotificationCenterPageComponent)
+    loadComponent: () => import('src/app/shared/components/notification/notification-center-page/notification-center-page.component').then(m => m.NotificationCenterPageComponent)
   }
 ];

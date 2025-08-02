@@ -6,7 +6,10 @@ import { RequestStatus } from '../../../core/models/request-status.enum';
 import { ActivatedRoute } from '@angular/router';
 import { SalaryAdvanceService } from '../../../core/services/salary-advance.service';
 import { UserService } from '../../../core/services/user.service';
-import { SnakeTimelineComponent, RequestActivity } from 'src/app/shared/components/request-activity-timeline.component';
+import { SnakeTimelineComponent, RequestActivity } from 'src/app/shared/components/request -activity-timeline/request-activity-timeline.component';
+import { CommentThreadComponent } from 'src/app/shared/components/comment-thread/comment-thread.component';
+import { AuthService } from 'src/app/core/services/auth.service';
+import { User } from 'src/app/core/models/user.model';
 
 @Component({
   selector: 'app-request-details',
@@ -14,7 +17,8 @@ import { SnakeTimelineComponent, RequestActivity } from 'src/app/shared/componen
   imports: [
     CommonModule,
     ValidationModal,
-    SnakeTimelineComponent
+    SnakeTimelineComponent,
+    CommentThreadComponent
   ],
   templateUrl: './request-details.html',
   styleUrls: ['./request-details.scss']
@@ -24,6 +28,8 @@ export class RequestDetails implements OnInit {
   @Input() employee: any = null; // à remplacer par un vrai modèle si besoin
   @Input() advancesInProgress: SalaryAdvanceRequest[] = [];
   requestHistory: any[] = [];
+  activities: RequestActivity[] = [];
+  currentUser: User | null = null;
 
   RequestStatus = RequestStatus;
 
@@ -33,55 +39,15 @@ export class RequestDetails implements OnInit {
   errorMessage = '';
   loading = false;
 
-  mockActivities: RequestActivity[] = [
-    {
-      type: 'SUBMISSION',
-      status: 'pending',
-      actor: 'John Doe',
-      actorRole: 'Employé',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
-      comment: 'Demande initiale d’avance sur salaire.'
-    },
-    {
-      type: 'COMMENT',
-      status: 'pending',
-      actor: 'John Doe',
-      actorRole: 'Employé',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2.5).toISOString(),
-      comment: 'Merci de traiter rapidement.'
-    },
-    {
-      type: 'VALIDATION',
-      status: 'approved',
-      actor: 'Expert RH',
-      actorRole: 'RH',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
-      comment: 'Demande validée.'
-    },
-    {
-      type: 'PAYMENT',
-      status: 'approved',
-      actor: 'Comptabilité',
-      actorRole: 'Service Paie',
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      details: 'Virement effectué sur le compte bancaire.'
-    },
-    {
-      type: 'CLOSURE',
-      status: 'approved',
-      actor: 'Système',
-      timestamp: new Date().toISOString(),
-      details: 'Demande clôturée automatiquement après remboursement.'
-    }
-  ];
-
   constructor(
     private route: ActivatedRoute,
     private salaryAdvanceService: SalaryAdvanceService,
-    private userService: UserService
+    private userService: UserService,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
+    this.currentUser = this.authService.getCurrentUser();
     const id = Number(this.route.snapshot.paramMap.get('id'));
     this.salaryAdvanceService.getRequestById(id).subscribe(request => {
       this.request = request;
@@ -95,11 +61,35 @@ export class RequestDetails implements OnInit {
           r.id !== request.id
         );
       });
-      // Fetch request history
+      // Fetch request history and map to timeline activities
       this.salaryAdvanceService.getRequestHistoryById(request.id).subscribe(history => {
-        this.requestHistory = history;
+        this.activities = history.map(h => ({
+          type: this.mapStatusToType(h.newStatus),
+          status: this.mapStatusToTimelineStatus(h.newStatus),
+          actor: h.changedBy,
+          timestamp: h.changedAt,
+          comment: h.comment
+        }));
       });
     });
+  }
+
+  private mapStatusToType(status: string): RequestActivity['type'] {
+    switch (status) {
+      case 'PENDING': return 'SUBMISSION';
+      case 'APPROVED': return 'VALIDATION';
+      case 'REJECTED': return 'REJECTION';
+      default: return 'UPDATE';
+    }
+  }
+
+  private mapStatusToTimelineStatus(status: string): RequestActivity['status'] {
+    switch (status) {
+      case 'PENDING': return 'pending';
+      case 'APPROVED': return 'approved';
+      case 'REJECTED': return 'rejected';
+      default: return 'pending';
+    }
   }
 
   get statusColor() {

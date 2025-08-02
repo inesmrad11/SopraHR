@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { NgxPaginationModule } from 'ngx-pagination';
 import { NgSelectModule } from '@ng-select/ng-select';
 import { SalaryAdvanceRequest } from '../../../core/models/salary-advance-request.model';
@@ -9,6 +9,9 @@ import { RequestStatus, RequestStatusDisplay } from '../../../core/models/reques
 import { SalaryAdvanceService } from '../../../core/services/salary-advance.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { BreadcrumbComponent, BreadcrumbItem } from 'src/app/theme/shared/components/breadcrumb/breadcrumb.component';
+import { IconService, IconDirective } from '@ant-design/icons-angular';
+import { SearchOutline, CloseOutline, EyeOutline, SortAscendingOutline, LeftOutline, RightOutline, FileTextOutline } from '@ant-design/icons-angular/icons';
 
 @Component({
   selector: 'app-advance-request-list',
@@ -18,7 +21,9 @@ import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
     FormsModule,
     RouterModule,
     NgxPaginationModule,
-    NgSelectModule
+    NgSelectModule,
+    BreadcrumbComponent,
+    IconDirective
   ],
   templateUrl: './advance-request-list.component.html',
   styleUrls: ['./advance-request-list.component.scss']
@@ -57,13 +62,28 @@ export class AdvanceRequestListComponent implements OnInit {
   sortDirection: 'asc' | 'desc' = 'asc';
   currentPage = 1;
   itemsPerPage = 5;
-  totalPages = 1;
   totalPagesArray: number[] = [];
   startItem = 1;
   endItem = 1;
   apiError: string | null = null;
+  breadcrumbs: BreadcrumbItem[] = [
+    { label: 'Accueil', route: '/employee/employee-home' },
+    { label: 'Mes demandes', active: true }
+  ];
 
-  constructor(private salaryAdvanceService: SalaryAdvanceService, private authService: AuthService) {
+  // Nouvelles propriétés pour le design harmonisé
+  showSearch: boolean = false;
+  loading: boolean = false;
+  itemsPerPageOptions = [5, 10, 15, 25];
+
+  constructor(
+    private salaryAdvanceService: SalaryAdvanceService, 
+    private authService: AuthService,
+    private iconService: IconService,
+    private router: Router
+  ) {
+    this.iconService.addIcon(...[SearchOutline, CloseOutline, EyeOutline, SortAscendingOutline, LeftOutline, RightOutline, FileTextOutline]);
+    
     this.searchSubject.pipe(
       debounceTime(300),
       distinctUntilChanged()
@@ -176,15 +196,16 @@ export class AdvanceRequestListComponent implements OnInit {
     this.updatePagination();
   }
   updatePagination() {
-    this.totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage) || 1;
-    this.totalPagesArray = Array.from({ length: this.totalPages }, (_, i) => i + 1);
+    const totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage) || 1;
+    this.totalPagesArray = Array.from({ length: totalPages }, (_, i) => i + 1);
     this.startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
     this.endItem = Math.min(this.currentPage * this.itemsPerPage, this.filteredData.length);
     this.paginatedData = this.filteredData.slice(this.startItem - 1, this.endItem);
   }
   changePage(direction: number) {
     const newPage = this.currentPage + direction;
-    if (newPage >= 1 && newPage <= this.totalPages) {
+    const totalPages = Math.ceil(this.filteredData.length / this.itemsPerPage) || 1;
+    if (newPage >= 1 && newPage <= totalPages) {
       this.currentPage = newPage;
       this.updatePagination();
     }
@@ -222,5 +243,125 @@ export class AdvanceRequestListComponent implements OnInit {
       return this.sortDirection === 'asc' ? 'asc' : 'desc';
     }
     return '';
+  }
+
+  // Nouvelles méthodes pour le design harmonisé
+  toggleSearch(): void {
+    this.showSearch = !this.showSearch;
+  }
+
+  closeSearch(): void {
+    this.showSearch = false;
+    this.searchTerm = '';
+    this.applyFilters();
+  }
+
+  toggleSortOptions(): void {
+    // Méthode pour afficher les options de tri si nécessaire
+    console.log('Options de tri');
+  }
+
+  // Méthodes de pagination harmonisées
+  get paginatedRequests(): SalaryAdvanceRequest[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredRequests.slice(startIndex, endIndex);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredRequests.length / this.itemsPerPage);
+  }
+
+  get paginationInfo(): string {
+    const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const endItem = Math.min(this.currentPage * this.itemsPerPage, this.filteredRequests.length);
+    return `Affichage de ${startItem} à ${endItem} sur ${this.filteredRequests.length} entrées`;
+  }
+
+  onItemsPerPageChange(): void {
+    this.currentPage = 1;
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  // Méthodes de formatage harmonisées avec request-history
+  formatAmount(amount: number): string {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'TND',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  }
+
+  formatDate(date: string | Date): string {
+    if (!date) return '-';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  }
+
+  getStatusDisplay(status: string): string {
+    switch (status) {
+      case 'PENDING':
+        return 'En attente';
+      case 'APPROVED':
+        return 'Validée';
+      case 'REJECTED':
+        return 'Rejetée';
+      default:
+        return status;
+    }
+  }
+
+  getProgressClass(request: any): string {
+    const progress = request.repaymentProgress || 0;
+    if (progress >= 100) {
+      return 'progress-success';
+    } else if (progress >= 50) {
+      return 'progress-warning';
+    } else {
+      return 'progress-info';
+    }
+  }
+
+  viewRequestDetails(request: any): void {
+    // Navigation vers la page de détails
+    this.router.navigate(['/employee/advance-request-details', request.id]);
+  }
+
+  loadRequests(): void {
+    this.loading = true;
+    this.salaryAdvanceService.getMyRequests().subscribe({
+      next: (requests) => {
+        this.requests = requests;
+        this.filteredRequests = [...requests];
+        this.loading = false;
+        this.apiError = null;
+      },
+      error: (err) => {
+        this.loading = false;
+        if (err.status === 403) {
+          this.apiError = "Accès refusé : vous n'avez pas l'autorisation d'afficher vos demandes.";
+        } else {
+          this.apiError = "Erreur lors de la récupération des demandes (" + (err.status || "") + ")";
+        }
+        this.requests = [];
+        this.filteredRequests = [];
+      }
+    });
   }
 }

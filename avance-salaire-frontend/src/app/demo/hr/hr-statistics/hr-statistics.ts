@@ -3,6 +3,23 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardComponent } from 'src/app/theme/shared/components/card/card.component';
 import { IconService, IconDirective } from '@ant-design/icons-angular';
+import { 
+  SearchOutline, 
+  BellOutline, 
+  DownloadOutline, 
+  FileTextOutline, 
+  CheckCircleOutline, 
+  DollarOutline, 
+  ArrowRightOutline,
+  RiseOutline,
+  PieChartOutline,
+  FilterOutline,
+  EyeOutline,
+  EditOutline,
+  TagOutline,
+  ClockCircleOutline,
+  AlertOutline
+} from '@ant-design/icons-angular/icons';
 import { MonthlyBarChartComponent } from 'src/app/theme/shared/apexchart/monthly-bar-chart/monthly-bar-chart.component';
 import { IncomeOverviewChartComponent } from 'src/app/theme/shared/apexchart/income-overview-chart/income-overview-chart.component';
 import { AnalyticsChartComponent } from 'src/app/theme/shared/apexchart/analytics-chart/analytics-chart.component';
@@ -10,6 +27,7 @@ import { SalesReportChartComponent } from 'src/app/theme/shared/apexchart/sales-
 import { SalaryAdvanceService } from 'src/app/core/services/salary-advance.service';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { AuthService } from 'src/app/core/services/auth.service';
+
 
 @Component({
   selector: 'app-hr-statistics',
@@ -31,10 +49,37 @@ export class HrStatistics implements OnInit {
   today: Date = new Date();
   userFirstName: string = 'Prénom';
   userLastName: string = 'Nom';
+  userFullName: string = 'Utilisateur';
   welcomeImage: string = '';
+  cardImages = [
+    'assets/images/welcome/8d0f3c19-2547-4b20-8911-9713329c4ca6_800w.jpg',
+    'assets/images/welcome/9dead2ce-9640-41bd-8153-af6e7acc42cf_800w.jpg',
+    'assets/images/welcome/86c20217-e734-45e2-a50b-0e5602db415c_800w.jpg'
+  ];
   private salaryAdvanceService = inject(SalaryAdvanceService);
+  private iconService = inject(IconService);
+  private authService = inject(AuthService);
 
-  constructor(private authService: AuthService) {}
+  constructor() {
+    // Ajouter les icônes Ant Design
+    this.iconService.addIcon(...[
+      SearchOutline, 
+      BellOutline, 
+      DownloadOutline, 
+      FileTextOutline, 
+      CheckCircleOutline, 
+      DollarOutline, 
+      ArrowRightOutline,
+      RiseOutline,
+      PieChartOutline,
+      FilterOutline,
+      EyeOutline,
+      EditOutline,
+      TagOutline,
+      ClockCircleOutline,
+      AlertOutline
+    ]);
+  }
 
   // Widgets
   widgets: any[] = [];
@@ -50,6 +95,8 @@ export class HrStatistics implements OnInit {
 
   // Table des demandes récentes
   recentRequests: any[] = [];
+
+
 
   // Historique des actions RH (mock data for now)
   rhActions: any[] = [
@@ -77,17 +124,31 @@ export class HrStatistics implements OnInit {
   ];
 
   ngOnInit() {
-    // Get real user data from AuthService if available
-    const user = this.authService.getCurrentUser?.();
+    // Récupérer l'utilisateur connecté
+    const user = this.authService.getCurrentUser();
+    
+    // Mettre à jour les noms avec les vraies données de l'utilisateur
     if (user) {
       this.userFirstName = user.firstName || 'Prénom';
       this.userLastName = user.lastName || 'Nom';
+      // Utiliser le nom complet s'il existe, sinon construire à partir du prénom et nom
+      this.userFullName = user.name && user.name.trim() !== '' 
+        ? user.name 
+        : `${this.userFirstName} ${this.userLastName}`.trim();
+      
+      console.log('Utilisateur connecté:', {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        name: user.name,
+        userFullName: this.userFullName
+      });
     }
+
     // Set image based on day of week (1 = Monday, 7 = Sunday)
     const day = this.today.getDay(); // 0 = Sunday, 1 = Monday, ...
     const imageMap = [
       '7.jpg', // Sunday (0)
-      '1.png', // Monday (1)
+      '7.jpg', // Monday (1)
       '2.jpg', // Tuesday (2)
       '3.jpg', // Wednesday (3)
       '4.jpg', // Thursday (4)
@@ -181,4 +242,18 @@ export class HrStatistics implements OnInit {
     const d = this.today;
     return `${jours[d.getDay()]} ${d.getDate()} ${mois[d.getMonth()]}`;
   }
+
+  // Méthodes pour les avatars
+  getAvatarUrl(email: string, name: string, profilePicture?: string): string {
+    if (profilePicture) {
+      return profilePicture;
+    }
+    return 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+  }
+
+  onImageError(event: any): void {
+    event.target.src = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png';
+  }
+
+
 }

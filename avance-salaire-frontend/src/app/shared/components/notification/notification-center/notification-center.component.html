@@ -1,0 +1,44 @@
+<div class="notification-center">
+  <button class="notif-btn" (click)="togglePanel()">
+    <span class="notif-bell-wrapper">
+      <i antIcon type="bell" theme="outline"></i>
+      <span class="notif-badge" *ngIf="unreadCount > 0">{{ unreadCount }}</span>
+    </span>
+  </button>
+
+  <div class="notification-backdrop" *ngIf="showPanel" (click)="showPanel = false"></div>
+  <div class="notification-center-panel" *ngIf="showPanel" (click)="$event.stopPropagation()">
+    <div class="notification-header">
+      <span class="header-title">Notifications</span>
+    </div>
+    <div class="notification-list">
+      <div *ngIf="notifications.length === 0" class="notification-row empty">
+        <div class="notif-icon-wrapper">
+          <i antIcon type="bell" theme="outline"></i>
+        </div>
+        <div class="notif-main-content">
+          <div class="notif-title">Aucune notification</div>
+          <div class="notif-message">Aucune notification ne correspond à vos critères de recherche.</div>
+        </div>
+      </div>
+      <div *ngFor="let notif of notifications | slice:0:5" class="notification-row" [class.unread]="!notif.read">
+        <div class="notif-icon-wrapper">
+          <i antIcon [type]="getIcon(notif.type)" theme="outline"></i>
+        </div>
+        <div class="notif-main-content">
+          <div class="notif-title">{{ notif.title }}</div>
+          <div class="notif-message">{{ notif.message }}</div>
+          <div class="notif-time">{{ notif.createdAt | date:'M/d/yy, h:mm a' }}</div>
+        </div>
+        <div class="notif-status" *ngIf="!notif.read">
+          <i antIcon type="check" theme="outline"></i>
+        </div>
+      </div>
+    </div>
+    <div class="notification-footer">
+      <span class="view-all-link" (click)="goToNotifications($event)">
+        Voir toutes les notifications
+      </span>
+    </div>
+  </div>
+</div> 

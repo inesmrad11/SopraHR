@@ -35,13 +35,22 @@ export const NavigationItems: NavigationItem[] = [
         breadcrumbs: false
       },
       {
+        id: 'requests',
+        title: 'Toutes les demandes',
+        type: 'item',
+        url: '/hr/requests',
+        classes: 'nav-item',
+        icon: 'profile',
+        breadcrumbs: true
+      },
+      {
         id: 'kanban',
         title: 'Kanban',
         type: 'item',
         url: '/hr/kanban',
         classes: 'nav-item',
         icon: 'appstore',
-        breadcrumbs: false
+        breadcrumbs: true
       },
       {
         id: 'history',
@@ -50,16 +59,16 @@ export const NavigationItems: NavigationItem[] = [
         url: '/hr/history',
         classes: 'nav-item',
         icon: 'unordered-list',
-        breadcrumbs: false
+        breadcrumbs: true
       },
       {
-        id: 'requests',
-        title: 'Toutes les demandes',
+        id: 'messages',
+        title: 'Messagerie',
         type: 'item',
-        url: '/hr/requests',
+        url: '/hr/messages',
         classes: 'nav-item',
-        icon: 'profile',
-        breadcrumbs: false
+        icon: 'message',
+        breadcrumbs: true
       },
       {
         id: 'notifications',
@@ -70,6 +79,7 @@ export const NavigationItems: NavigationItem[] = [
         icon: 'bell',
         breadcrumbs: false
       },
+
     ]
   },
   {

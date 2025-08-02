@@ -1,0 +1,225 @@
+// Variables de couleur professionnelles
+$white: #ffffff;
+$text-dark: #2c3e50;
+$text-muted: #6c757d;
+$border-color: #e9ecef;
+$hover-bg: #f8f9fa;
+$primary-purple: #8B5FBF;
+
+.notification-center {
+  position: relative;
+  display: inline-block;
+}
+
+.notif-bell-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: #dc3545;
+  color: $white;
+  border-radius: 0;
+  font-size: 11px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  border: 2px solid $white;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.notif-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 44px;
+  border-radius: 0;
+  transition: all 0.2s ease;
+  color: $text-dark;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  i[antIcon] {
+    font-size: 18px;
+    color: $text-dark;
+  }
+}
+
+.notification-center-panel {
+  position: absolute;
+  top: 52px;
+  right: 0;
+  width: 400px;
+  background: $white;
+  border-radius: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  z-index: 2000;
+  border: 1px solid $border-color;
+}
+
+.notification-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: $text-dark;
+  background: $white;
+  border-bottom: 1px solid $border-color;
+
+  .header-title {
+    font-weight: 600;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: $text-muted;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: $text-dark;
+    }
+
+    i[antIcon] {
+      font-size: 16px;
+    }
+  }
+}
+
+.notification-list {
+  max-height: 400px;
+  overflow-y: auto;
+  background: $white;
+}
+
+.notification-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 1px solid $border-color;
+  transition: background 0.2s ease;
+  cursor: pointer;
+  position: relative;
+
+  &:hover {
+    background: $hover-bg;
+  }
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &.unread {
+    background: $white;
+  }
+}
+
+.notif-icon-wrapper {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e9ecef;
+  flex-shrink: 0;
+  color: $text-muted;
+
+  i[antIcon] {
+    font-size: 16px;
+  }
+}
+
+.notif-main-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: $text-dark;
+  line-height: 1.4;
+  margin-bottom: 6px;
+}
+
+.notif-message {
+  font-size: 13px;
+  color: $text-dark;
+  line-height: 1.5;
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.notif-time {
+  font-size: 12px;
+  color: $text-muted;
+  font-weight: 400;
+}
+
+.notif-status {
+  display: flex;
+  align-items: center;
+  color: $primary-purple;
+  margin-left: auto;
+
+  i[antIcon] {
+    font-size: 14px;
+  }
+}
+
+.notification-footer {
+  padding: 16px 24px;
+  border-top: 1px solid $border-color;
+  background: $white;
+  text-align: center;
+}
+
+.view-all-link {
+  background: transparent;
+  border: none;
+  background: linear-gradient(90deg, #4b2067 0%, #a728a7 60%, #fbb034 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  text-decoration: none;
+
+  &:hover {
+    opacity: 0.8;
+  }
+}
+
+/* Backdrop for closing dropdown */
+.notification-backdrop {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: transparent;
+  z-index: 1999;
+} 

@@ -1,78 +1,155 @@
-<div class="card shadow rounded-4">
-  <div class="card-header bg-white border-bottom-0 pb-0">
-    <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
-      <!-- Titre retiré d'ici -->
-      <div class="search-bar-wrapper w-100 w-md-auto mt-3 mt-md-0">
-        <div class="search-bar">
-          <span class="search-icon">
-            <svg class="icon" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </span>
-          <input type="text" class="form-control search-input" placeholder="Rechercher une demande..." [(ngModel)]="searchTerm" (input)="onSearchChange($event)">
+<app-breadcrumb [breadcrumbItems]="breadcrumbs"></app-breadcrumb>
+
+<!-- Dashboard moderne avec design harmonisé -->
+<div class="light-dashboard">
+  <!-- Header avec style identique à hr-requests -->
+  <div class="welcome-banner">
+    <div class="welcome-banner-overlay"></div>
+    <div class="welcome-banner-content">
+      <div class="welcome-banner-text">
+        <div class="welcome-greeting">Mes demandes d'avance</div>
+        <div class="welcome-description">Suivez l'état de vos demandes d'avance de salaire et leur progression.</div>
+      </div>
+      <div class="welcome-banner-actions">
+        <div class="search-container">
+          <button class="action-btn search-btn" (click)="toggleSearch()" *ngIf="!showSearch">
+            <i antIcon type="search" theme="outline"></i>
+          </button>
+          <div class="inline-search" *ngIf="showSearch">
+            <div class="search-input-wrapper">
+              <i antIcon type="search" theme="outline"></i>
+              <input 
+                type="text" 
+                placeholder="Rechercher une demande..." 
+                [(ngModel)]="searchTerm"
+                (input)="onSearchChange($event)"
+                class="inline-search-input"
+                autofocus
+              >
+              <button class="close-inline-search" (click)="closeSearch()">
+                <i antIcon type="close" theme="outline"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <div *ngIf="apiError" class="alert alert-danger text-center mt-3 mb-0">{{ apiError }}</div>
-  <div class="card-body p-0">
-    <div class="table-responsive">
-      <table class="table table-hover table-striped align-middle mb-0">
-        <thead class="table-light">
+
+  <!-- États de chargement et erreur -->
+  <div *ngIf="loading" class="loading-state">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Chargement des demandes...</div>
+  </div>
+  
+  <div *ngIf="apiError" class="error-state">
+    <div class="error-icon">⚠️</div>
+    <div class="error-message">{{ apiError }}</div>
+    <button class="retry-btn" (click)="loadRequests()">Réessayer</button>
+  </div>
+
+  <!-- Tableau des demandes -->
+  <div class="requests-section">
+    <div class="requests-header">
+      <h2 class="requests-title">Mes demandes d'avance ({{ filteredRequests.length }})</h2>
+      <div class="header-actions">
+        <button class="sort-btn" (click)="toggleSortOptions()">
+          <i antIcon type="sort-ascending" theme="outline"></i>
+          Trier
+        </button>
+      </div>
+    </div>
+    
+    <div class="requests-table">
+      <table class="table">
+        <thead>
           <tr>
-            <th (click)="sort('requestedAmount')" class="sortable table-header-main">Montant demandé <span class="sort-arrow" [ngClass]="getSortClass('requestedAmount')"></span></th>
-            <th (click)="sort('status')" class="sortable table-header-main">Statut <span class="sort-arrow" [ngClass]="getSortClass('status')"></span></th>
-            <th (click)="sort('repaymentProgress')" class="sortable table-header-main">Remboursement <span class="sort-arrow" [ngClass]="getSortClass('repaymentProgress')"></span></th>
-            <th (click)="sort('requestDate')" class="sortable table-header-main">Date <span class="sort-arrow" [ngClass]="getSortClass('requestDate')"></span></th>
-            <th class="table-header-main">Actions</th>
+            <th class="amount-header" (click)="sort('requestedAmount')">
+              Montant demandé
+              <span class="sort-arrow" [ngClass]="getSortClass('requestedAmount')"></span>
+            </th>
+            <th class="status-header" (click)="sort('status')">
+              Statut
+              <span class="sort-arrow" [ngClass]="getSortClass('status')"></span>
+            </th>
+            <th class="progress-header" (click)="sort('repaymentProgress')">
+              Remboursement
+              <span class="sort-arrow" [ngClass]="getSortClass('repaymentProgress')"></span>
+            </th>
+            <th class="date-header" (click)="sort('requestDate')">
+              Date de demande
+              <span class="sort-arrow" [ngClass]="getSortClass('requestDate')"></span>
+            </th>
+            <th class="actions-header">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let request of filteredRequests | slice:(currentPage-1)*itemsPerPage:(currentPage)*itemsPerPage">
-            <td>{{ request.requestedAmount?.toFixed(2) }} TND</td>
-            <td>
-              <span class="badge" [ngClass]="getStatusClass(request.status)">
-                {{ request.status }}
+          <tr *ngFor="let request of paginatedRequests" class="table-row">
+            <td class="amount-cell">{{ formatAmount(request.requestedAmount) }}</td>
+            <td class="status-cell">
+              <span class="status-badge" [ngClass]="getStatusClass(request.status)">
+                {{ getStatusDisplay(request.status) }}
               </span>
             </td>
-            <td style="min-width: 120px;">
-              <div class="progress" style="height: 18px;">
-                <div class="progress-bar" role="progressbar"
-                  [ngClass]="request.isFullyPaid ? 'bg-success' : 'bg-secondary'"
-                  [style.width]="(request.repaymentProgress || 0) + '%'">
-                  {{ request.repaymentProgress != null ? request.repaymentProgress + '%' : '0%' }}
+            <td class="progress-cell">
+              <div class="progress-container">
+                <div class="progress-bar">
+                  <div class="progress-fill" [ngClass]="getProgressClass(request)" [style.width]="(request.repaymentProgress || 0) + '%'"></div>
                 </div>
+                <span class="progress-text">{{ request.repaymentProgress || 0 }}%</span>
               </div>
             </td>
-            <td>{{ request.requestDate | date:'yyyy-MM-dd' }}</td>
-            <td>
-              <a [routerLink]="['/employee/advance-request-details', request.id]" class="btn btn-outline-primary btn-sm action-eye" title="Voir détails">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3.2"/><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7-10-7-10-7z"/></svg>
-              </a>
+            <td class="date-cell">{{ formatDate(request.requestDate) }}</td>
+            <td class="actions-cell">
+              <button class="action-btn view-btn" title="Voir détails" (click)="viewRequestDetails(request)">
+                <i antIcon type="eye" theme="outline"></i>
+              </button>
             </td>
           </tr>
-          <tr *ngIf="filteredRequests.length === 0">
-            <td colspan="5" class="text-center py-4">
-              <div class="text-muted">Aucune demande trouvée</div>
+          <tr *ngIf="filteredRequests.length === 0" class="empty-row">
+            <td colspan="5" class="empty-cell">
+              <div class="empty-state">
+                <i antIcon type="file-text" theme="outline"></i>
+                <h3>Aucune demande trouvée</h3>
+                <p>Aucune demande ne correspond à vos critères de recherche.</p>
+              </div>
             </td>
           </tr>
         </tbody>
       </table>
-    </div>
-  </div>
-  <div class="card-footer d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 bg-white border-top-0">
-    <div class="text-muted small">
-      Affichage de {{ (currentPage - 1) * itemsPerPage + 1 }} à 
-      {{ currentPage * itemsPerPage > totalItems ? totalItems : currentPage * itemsPerPage }} sur {{ totalItems }} entrées
-    </div>
-    <div class="custom-pagination d-flex align-items-center gap-2">
-      <button class="pagination-arrow" [disabled]="currentPage === 1" (click)="changePage(-1)">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <ng-container *ngFor="let page of totalPagesArray">
-        <button class="pagination-page" [class.active]="page === currentPage" (click)="goToPage(page)">{{ page }}</button>
-      </ng-container>
-      <button class="pagination-arrow" [disabled]="currentPage === totalPages" (click)="changePage(1)">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 6 15 12 9 18"/></svg>
-      </button>
+
+      <!-- Pagination -->
+      <div *ngIf="filteredRequests.length > 0" class="pagination-section">
+        <div class="pagination-left">
+          <span class="pagination-info">{{ paginationInfo }}</span>
+          <div class="items-per-page">
+            <label>Afficher:</label>
+            <select 
+              [(ngModel)]="itemsPerPage" 
+              (change)="onItemsPerPageChange()"
+              class="items-per-page-select">
+              <option *ngFor="let option of itemsPerPageOptions" [value]="option">
+                {{ option }} éléments
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="pagination-controls">
+          <button 
+            class="pagination-btn"
+            (click)="previousPage()"
+            [disabled]="currentPage === 1">
+            <i antIcon type="left" theme="outline"></i>
+          </button>
+          <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+          <button 
+            class="pagination-btn"
+            (click)="nextPage()"
+            [disabled]="currentPage === totalPages">
+            <i antIcon type="right" theme="outline"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

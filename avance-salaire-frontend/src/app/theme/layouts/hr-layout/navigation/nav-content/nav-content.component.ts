@@ -22,7 +22,8 @@ import {
   BgColorsOutline,
   AntDesignOutline,
   KeyOutline,
-  PieChartOutline
+  PieChartOutline,
+  RiseOutline
 } from '@ant-design/icons-angular/icons';
 import { NgScrollbarModule } from 'ngx-scrollbar';
 
@@ -63,7 +64,8 @@ export class NavContentComponent implements OnInit {
         ChromeOutline,
         QuestionOutline,
         KeyOutline,
-        PieChartOutline
+        PieChartOutline,
+        RiseOutline
       ]
     );
     this.navigations = NavigationItems;

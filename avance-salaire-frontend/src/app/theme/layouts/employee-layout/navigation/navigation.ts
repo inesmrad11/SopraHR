@@ -31,8 +31,7 @@ export const NavigationItems: NavigationItem[] = [
         type: 'item',
         url: '/employee/employee-home',
         classes: 'nav-item',
-        // icon: 'home', // Material icon, not available in Ant Design Angular
-        icon: 'dashboard', // fallback to Ant Design icon
+        icon: 'dashboard',
         breadcrumbs: false
       },
       {
@@ -41,9 +40,8 @@ export const NavigationItems: NavigationItem[] = [
         type: 'item',
         url: '/employee/advance-request-form',
         classes: 'nav-item',
-        // icon: 'request_quote', // Material icon, not available in Ant Design Angular
-        icon: 'credit-card', // fallback to Ant Design icon
-        breadcrumbs: false
+        icon: 'credit-card',
+        breadcrumbs: true
       },
       {
         id: 'advance-request-list',
@@ -51,9 +49,8 @@ export const NavigationItems: NavigationItem[] = [
         type: 'item',
         url: '/employee/advance-request-list',
         classes: 'nav-item',
-        // icon: 'list_alt', // Material icon, not available in Ant Design Angular
-        icon: 'profile', // fallback to Ant Design icon
-        breadcrumbs: false
+        icon: 'profile',
+        breadcrumbs: true
       },
       {
         id: 'notifications',
@@ -62,7 +59,7 @@ export const NavigationItems: NavigationItem[] = [
         url: 'notifications',
         classes: 'nav-item',
         icon: 'bell',
-        breadcrumbs: false
+        breadcrumbs: true
       }
     ]
   },

@@ -1,1 +1,148 @@
-<app-snake-timeline [activities]="mockActivities"></app-snake-timeline>
+<div class="bento-grid-container">
+  <!-- Grille Bento avec cellules de tailles mixtes -->
+  <div class="bento-grid">
+    
+    <!-- Cellule principale - Timeline (grande) -->
+    <div class="bento-cell timeline-cell" style="grid-column: span 2; grid-row: span 2;">
+      <div class="cell-header">
+        <h3><i antIcon type="clock" theme="outline"></i> Suivi de la demande</h3>
+      </div>
+      <div class="cell-content">
+        <app-snake-timeline [activities]="activities"></app-snake-timeline>
+      </div>
+    </div>
+
+    <!-- Cellule - Détails de la demande (petite, en haut à droite) -->
+    <div class="bento-cell details-cell">
+      <div class="cell-header">
+        <h3><i antIcon type="info-circle" theme="outline"></i> Détails</h3>
+      </div>
+      <div class="cell-content">
+        <div class="request-details">
+          <div class="detail-item">
+            <span class="detail-label">Montant demandé</span>
+            <span class="detail-value amount">{{ request?.requestedAmount | currency:'TND':'symbol':'1.0-0' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Date de demande</span>
+            <span class="detail-value">{{ request?.createdAt | date:'dd/MM/yyyy' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Durée de remboursement</span>
+            <span class="detail-value">{{ request?.repaymentMonths }} mois</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Motif</span>
+            <span class="detail-value reason">{{ request?.reason || 'Non spécifié' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Statut</span>
+            <span class="detail-value status" [ngClass]="'status-' + (request?.status?.toLowerCase() || 'pending')">
+              {{ request?.status || 'En attente' }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cellule - Statistiques (petite, en bas à droite) -->
+    <div class="bento-cell stats-cell">
+      <div class="cell-header">
+        <h3><i antIcon type="bar-chart" theme="outline"></i> Statistiques</h3>
+      </div>
+      <div class="cell-content">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number">{{ activities.length }}</div>
+            <div class="stat-label">Étapes</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ getCompletedSteps() }}</div>
+            <div class="stat-label">Terminées</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ getCompletionPercentage() }}%</div>
+            <div class="stat-label">Progression</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number">{{ comments.length }}</div>
+            <div class="stat-label">Messages</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cellule - Conversation (moyenne, en bas) -->
+    <div class="bento-cell conversation-cell" style="grid-column: span 2;">
+      <div class="cell-header">
+        <h3><i antIcon type="message" theme="outline"></i> Discussion</h3>
+      </div>
+      <div class="cell-content">
+        <div class="conversation-container">
+          <!-- Messages -->
+          <div class="messages-area" #messagesContainer>
+            <div *ngFor="let c of comments; let i = index">
+              <!-- Séparateur de date quand le jour change -->
+              <div class="date-separator" *ngIf="i > 0 && showDateSeparator(comments[i-1], c)">
+                {{ c.createdAt | date:'mediumDate' }}
+              </div>
+
+              <div class="message-wrapper" [ngClass]="{'from-employee': c.type === 'EMPLOYE', 'from-rh': c.type === 'RH'}">
+                <!-- Avatar pour les messages de l'employé -->
+                <div class="message-avatar" *ngIf="c.type === 'EMPLOYE'">
+                  <img [src]="getAvatarUrl(c.authorEmail || '', c.authorName, c.authorProfilePicture)" 
+                       (error)="onImageError($event)" 
+                       alt="Avatar employé">
+                </div>
+                
+                <div class="message-bubble">
+                  <div class="message-header">
+                    <span class="author-name">{{ c.authorName }}</span>
+                    <span class="author-role" *ngIf="c.authorRole">({{ c.authorRole | roleTranslate }})</span>
+                  </div>
+                  <div class="message-content">
+                    <div [innerHTML]="formatMessageContent(c.message)"></div>
+                  </div>
+                  <div class="message-footer">
+                    <span class="timestamp">{{ formatMessageTime(c.createdAt) }}</span>
+                    <span class="read-status" *ngIf="c.type === 'EMPLOYE'">
+                      <i antIcon type="check" theme="outline"></i>
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Avatar pour les messages du RH -->
+                <div class="message-avatar" *ngIf="c.type === 'RH'">
+                  <img [src]="getAvatarUrl(c.authorEmail || '', c.authorName, c.authorProfilePicture)" 
+                       (error)="onImageError($event)" 
+                       alt="Avatar RH">
+                </div>
+              </div>
+            </div>
+            
+            <!-- Message de bienvenue si aucun message -->
+            <div *ngIf="comments.length === 0" class="empty-messages">
+              <i antIcon type="message" theme="outline"></i>
+              <p>Aucun message pour le moment. Commencez la discussion !</p>
+            </div>
+          </div>
+
+          <!-- Zone de saisie -->
+          <div class="chat-input">
+            <div class="message-input-container">
+              <textarea 
+                [(ngModel)]="newComment" 
+                placeholder="Tapez votre message..." 
+                (keydown.enter)="onEnterKey($any($event))">
+              </textarea>
+            </div>
+            <button class="send-btn" (click)="postComment()" [disabled]="!newComment.trim()">
+              <i antIcon type="send" theme="outline"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

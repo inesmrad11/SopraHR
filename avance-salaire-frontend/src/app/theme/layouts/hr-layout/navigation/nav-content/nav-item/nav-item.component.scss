@@ -1,1 +1,28 @@
-// This file is intentionally left empty to allow customers to add custom CSS if needed.
+li.active {
+    position: relative;
+  }
+  li.active > a {
+    background: linear-gradient(90deg, #f8f0ff 60%, #ffe7d1 100%);
+    color: #a728a7 !important;
+    border-radius: 8px;
+    box-shadow: none;
+    position: relative;
+    z-index: 1;
+    font-weight: 500;
+  }
+  li.active::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 4px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #851d85 0%, #f357a8 100%);
+    z-index: 2;
+  }
+  li.active > a .coded-micon i,
+  li.active > a .coded-mtext {
+    color: #a728a7 !important;
+  }
+  

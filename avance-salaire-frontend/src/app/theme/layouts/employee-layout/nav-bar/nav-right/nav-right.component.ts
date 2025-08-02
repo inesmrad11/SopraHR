@@ -5,7 +5,8 @@ import { RouterModule, Router } from '@angular/router';
 // project import
 import { AuthService } from 'src/app/core/services/auth.service';
 import { User } from 'src/app/core/models/user.model';
-import { NotificationCenterComponent } from 'src/app/shared/components/notification/notification-center.component';
+import { NotificationCenterComponent } from 'src/app/shared/components/notification/notification-center/notification-center.component';
+import { RoleTranslatePipe } from 'src/app/core/pipes/role-translate.pipe';
 
 // icon
 import { IconService, IconDirective } from '@ant-design/icons-angular';
@@ -30,14 +31,37 @@ import {
   AppstoreOutline,
   LayoutOutline,
   MailOutline,
-  FullscreenOutline
+  FullscreenOutline,
+  DownOutline,
+  // Notification icons
+  InfoCircleOutline,
+  WarningOutline,
+  CloseCircleOutline,
+  RollbackOutline,
+  SyncOutline,
+  PaperClipOutline,
+  TrophyOutline,
+  RiseOutline,
+  FileTextOutline,
+  CalendarOutline,
+  ExclamationCircleOutline,
+  BarChartOutline,
+  AlertOutline,
+  LineChartOutline,
+  ToolOutline,
+  DownloadOutline,
+  BulbOutline,
+  UserDeleteOutline,
+  SmileOutline,
+  EyeOutline,
+  ClockCircleOutline
 } from '@ant-design/icons-angular/icons';
 import { NgbDropdownModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgScrollbarModule } from 'ngx-scrollbar';
 
 @Component({
   selector: 'app-nav-right',
-  imports: [IconDirective, RouterModule, NgScrollbarModule, NgbNavModule, NgbDropdownModule, NotificationCenterComponent],
+  imports: [IconDirective, RouterModule, NgScrollbarModule, NgbNavModule, NgbDropdownModule, NotificationCenterComponent, RoleTranslatePipe],
   templateUrl: './nav-right.component.html',
   styleUrls: ['./nav-right.component.scss']
 })
@@ -76,7 +100,30 @@ export class NavRightComponent {
         AppstoreOutline,
         LayoutOutline,
         MailOutline,
-        FullscreenOutline
+        FullscreenOutline,
+        DownOutline,
+        // Notification icons
+        InfoCircleOutline,
+        WarningOutline,
+        CloseCircleOutline,
+        RollbackOutline,
+        SyncOutline,
+        PaperClipOutline,
+        TrophyOutline,
+        RiseOutline,
+        FileTextOutline,
+        CalendarOutline,
+        ExclamationCircleOutline,
+        BarChartOutline,
+        AlertOutline,
+        LineChartOutline,
+        ToolOutline,
+        DownloadOutline,
+        BulbOutline,
+        UserDeleteOutline,
+        SmileOutline,
+        EyeOutline,
+        ClockCircleOutline
       ]
     );
     this.authService.currentUser$.subscribe(user => {

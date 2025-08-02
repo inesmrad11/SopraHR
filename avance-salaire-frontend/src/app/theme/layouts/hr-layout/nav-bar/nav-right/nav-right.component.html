@@ -1,9 +1,9 @@
 <ul class="list-unstyled">
   <li class="pc-h-item">
-    <app-notification-center></app-notification-center>
+    <app-notification-center (click)="onBellClick()"></app-notification-center>
   </li>
   <li class="pc-h-item">
-    <a href="javascript:" class="pc-head-link me-0">
+    <a href="javascript:" class="pc-head-link me-0" (click)="goToHRMessages()">
       <i antIcon type="mail" theme="outline"></i>
     </a>
   </li>
@@ -20,7 +20,7 @@
           </div>
           <div class="flex-grow-1 ms-3 text-start">
             <h6 class="mb-0">{{ user?.firstName }} {{ user?.lastName }}</h6>
-            <span>{{ user?.jobTitle || 'Employé' }}</span>
+            <span>{{ user?.role | roleTranslate }}</span>
           </div>
           <a href="javascript:" class="bg-transparent" (click)="onLogoutClick($event)"><i class="d-flex f-20" antIcon theme="outline" type="logout"></i></a>
         </div>

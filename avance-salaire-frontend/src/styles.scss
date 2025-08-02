@@ -1,4 +1,19 @@
-@import 'node_modules/bootstrap/scss/functions';
+
+// Custom Theming for Angular Material
+// For more information: https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      theme-type: light,
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}@import 'node_modules/bootstrap/scss/functions';
 @import 'node_modules/bootstrap/scss/variables';
 @import 'node_modules/bootstrap/scss/variables-dark';
 
@@ -27,3 +42,14 @@
 
 @import 'scss/themes/preset-style.scss';
 @import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+html, body, #app, .app-root {
+  font-family: 'Inter', 'Geist', 'Roboto', 'Arial', sans-serif !important;
+}
+
+* {
+  font-family: inherit !important;
+}

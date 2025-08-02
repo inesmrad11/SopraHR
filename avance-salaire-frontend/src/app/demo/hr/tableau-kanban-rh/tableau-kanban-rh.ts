@@ -1,10 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { IconService, IconDirective } from '@ant-design/icons-angular';
+import { 
+  ReloadOutline, 
+  CloseOutline, 
+  DollarOutline, 
+  CreditCardOutline, 
+  ExclamationCircleOutline, 
+  CheckOutline 
+} from '@ant-design/icons-angular/icons';
 import { SalaryAdvanceService } from '../../../core/services/salary-advance.service';
 import { SalaryAdvanceRequest } from '../../../core/models/salary-advance-request.model';
 import { RequestStatus } from '../../../core/models/request-status.enum';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { BreadcrumbComponent, BreadcrumbItem } from 'src/app/theme/shared/components/breadcrumb/breadcrumb.component';
 
 const STATUS_MAP = {
   PENDING: 'En attente',
@@ -16,11 +26,15 @@ const STATUS_ORDER = ['PENDING', 'APPROVED', 'REJECTED'];
 @Component({
   selector: 'app-tableau-kanban-rh',
   standalone: true,
-  imports: [CommonModule, DragDropModule],
+  imports: [CommonModule, DragDropModule, BreadcrumbComponent, IconDirective],
   templateUrl: './tableau-kanban-rh.html',
   styleUrl: './tableau-kanban-rh.scss'
 })
 export class TableauKanbanRHComponent implements OnInit {
+  breadcrumbs: BreadcrumbItem[] = [
+    { label: 'Accueil', route: '/hr/hr-statistics' },
+    { label: 'Kanban', active: true }
+  ];
   columns: { 
     key: string; 
     label: string; 
@@ -41,28 +55,22 @@ export class TableauKanbanRHComponent implements OnInit {
   toastAction: (() => void) | null = null;
   selectedRequest: SalaryAdvanceRequest | null = null;
 
-  constructor(private salaryAdvanceService: SalaryAdvanceService, private sanitizer: DomSanitizer) {}
+  private iconService = inject(IconService);
+
+  constructor(private salaryAdvanceService: SalaryAdvanceService, private sanitizer: DomSanitizer) {
+    // Add Ant Design icons
+    this.iconService.addIcon(
+      ReloadOutline, 
+      CloseOutline, 
+      DollarOutline, 
+      CreditCardOutline, 
+      ExclamationCircleOutline, 
+      CheckOutline
+    );
+  }
 
   ngOnInit() {
     this.fetchRequests();
-  }
-
-  fetchRequests() {
-    this.loading = true;
-    this.salaryAdvanceService.getAllRequests().subscribe({
-      next: (data) => {
-        this.columns = [
-          { key: RequestStatus.PENDING, label: 'En attente', color: '#4b2067', requests: data.filter(r => r.status === RequestStatus.PENDING) },
-          { key: RequestStatus.APPROVED, label: 'Validée', color: '#a728a7', requests: data.filter(r => r.status === RequestStatus.APPROVED) },
-          { key: RequestStatus.REJECTED, label: 'Rejetée', color: '#fbb034', requests: data.filter(r => r.status === RequestStatus.REJECTED) }
-        ];
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = err.message || 'Erreur lors du chargement des demandes.';
-        this.loading = false;
-      }
-    });
   }
 
   drop(event: CdkDragDrop<SalaryAdvanceRequest[]>, targetStatus: string) {
@@ -70,45 +78,12 @@ export class TableauKanbanRHComponent implements OnInit {
       moveItemInArray(event.container.data, event.previousIndex, event.currentIndex);
     } else {
       const request = event.previousContainer.data[event.previousIndex];
-      // Remplacer la confirmation navigateur par un toast custom
-      if ((targetStatus === 'APPROVED' || targetStatus === 'REJECTED')) {
-        this.setToast(`Confirmer le passage en « ${STATUS_MAP[targetStatus]} » ? <button class='btn btn-primary kanban-toast-btn' id='confirm-toast-btn'>Confirmer</button> <button class='btn btn-outline kanban-toast-btn' id='cancel-toast-btn'>Annuler</button>`);
-        this.toastAction = () => {
-          // Mise à jour visuelle immédiate
-          transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
-          const fromStatus = event.previousContainer.id.replace('cdk-drop-list-', '');
-          this.salaryAdvanceService.changeRequestStatus(request.id, targetStatus).subscribe({
-            next: () => {
-              this.setToast(`Statut mis à jour: ${STATUS_MAP[targetStatus]} <button class='btn btn-outline undo-btn'>Annuler</button>`);
-              this.lastAction = { request, from: fromStatus, to: targetStatus };
-              clearTimeout(this.undoTimeout);
-              this.undoTimeout = setTimeout(() => {
-                this.toast = '';
-                this.lastAction = null;
-              }, 5000);
-            },
-            error: (err) => {
-              this.setToast(err.message || 'Erreur lors du changement de statut.');
-              setTimeout(() => this.toast = '', 2500);
-              // Revert visuel si erreur
-              transferArrayItem(event.container.data, event.previousContainer.data, event.currentIndex, event.previousIndex);
-            }
-          });
-        };
-        setTimeout(() => {
-          const confirmBtn = document.getElementById('confirm-toast-btn');
-          const cancelBtn = document.getElementById('cancel-toast-btn');
-          if (confirmBtn) confirmBtn.onclick = () => { this.toast = ''; this.toastAction && this.toastAction(); this.toastAction = null; };
-          if (cancelBtn) cancelBtn.onclick = () => { this.toast = ''; this.toastAction = null; };
-        }, 0);
-        return;
-      }
-      // Si pas de confirmation nécessaire
+      // Changement de statut immédiat, sans confirmation
       transferArrayItem(event.previousContainer.data, event.container.data, event.previousIndex, event.currentIndex);
       const fromStatus = event.previousContainer.id.replace('cdk-drop-list-', '');
       this.salaryAdvanceService.changeRequestStatus(request.id, targetStatus).subscribe({
         next: () => {
-          this.setToast(`Statut mis à jour: ${STATUS_MAP[targetStatus]} <button class='btn btn-outline undo-btn'>Annuler</button>`);
+          this.setToast(`Statut mis à jour: ${STATUS_MAP[targetStatus]}`);
           this.lastAction = { request, from: fromStatus, to: targetStatus };
           clearTimeout(this.undoTimeout);
           this.undoTimeout = setTimeout(() => {
@@ -225,4 +200,69 @@ export class TableauKanbanRHComponent implements OnInit {
       default: return status;
     }
   }
+
+  // Ajoutez ces méthodes à votre composant TableauKanbanRHComponent
+
+// Détermine si une carte doit afficher le gradient animé
+shouldShowGradient(req: SalaryAdvanceRequest): boolean {
+  // Afficher le gradient pour les montants élevés ou selon d'autres critères
+  return req.requestedAmount > 3000 || req.status === RequestStatus.APPROVED;
+}
+
+// Détermine si une carte doit afficher le motif en damier
+shouldShowPattern(req: SalaryAdvanceRequest): boolean {
+  // Afficher le motif pour les demandes en attente avec certains critères
+  return req.status === RequestStatus.PENDING && req.requestedAmount > 2000;
+}
+
+// Retourne la classe CSS pour le tag basé sur le statut et le montant
+getTagClass(req: SalaryAdvanceRequest): string {
+  const baseClass = 'card-tag';
+  
+  if (req.requestedAmount >= 5000) {
+    return `${baseClass} tag-research`;
+  } else if (req.requestedAmount >= 3000) {
+    return `${baseClass} tag-branding`;
+  } else if (req.requestedAmount >= 2000) {
+    return `${baseClass} tag-data-science`;
+  } else if (req.repaymentMonths <= 6) {
+    return `${baseClass} tag-ux-stage`;
+  } else {
+    return `${baseClass} tag-mobile`;
+  }
+}
+
+// Mise à jour de la méthode fetchRequests pour inclure les nouvelles couleurs
+fetchRequests() {
+  this.loading = true;
+  this.salaryAdvanceService.getAllRequests().subscribe({
+    next: (data) => {
+      this.columns = [
+        { 
+          key: RequestStatus.PENDING, 
+          label: 'En attente', 
+          color: '#e3f0ff', // Soft blue
+          requests: data.filter(r => r.status === RequestStatus.PENDING) 
+        },
+        { 
+          key: RequestStatus.APPROVED, 
+          label: 'Validée', 
+          color: '#e6f9ed', // Soft green
+          requests: data.filter(r => r.status === RequestStatus.APPROVED) 
+        },
+        { 
+          key: RequestStatus.REJECTED, 
+          label: 'Rejetée', 
+          color: '#ffeaea', // Soft red
+          requests: data.filter(r => r.status === RequestStatus.REJECTED) 
+        }
+      ];
+      this.loading = false;
+    },
+    error: (err) => {
+      this.error = err.message || 'Erreur lors du chargement des demandes.';
+      this.loading = false;
+    }
+  });
+}
 }

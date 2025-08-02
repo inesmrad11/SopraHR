@@ -17,6 +17,7 @@ export interface SalaryAdvanceRequest {
   repaymentProgress?: number; // 0-100, percent paid
   employeeId?: number; // id of the employee who made the request
   employeeEmail?: string; // email of the employee who made the request
+  employeeProfilePicture?: string; // profile picture of the employee who made the request
   repaymentMonths: number;
   employeeSalaryNet?: number;
   plafondDisponible?: number;

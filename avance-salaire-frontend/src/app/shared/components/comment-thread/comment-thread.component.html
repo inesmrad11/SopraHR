@@ -1,0 +1,21 @@
+<div class="comments-section">
+  <h4>Discussion</h4>
+  <div *ngFor="let c of comments" class="comment-item" [ngClass]="{'employee': c.type === 'EMPLOYE', 'rh': c.type === 'RH'}">
+    <div class="comment-avatar">
+      <img [src]="getAvatarUrl(c.authorEmail || '', c.authorName, c.authorProfilePicture)" 
+           (error)="onImageError($event)" 
+           alt="Avatar">
+    </div>
+    <div class="comment-bubble">
+      <div class="comment-meta">
+        <b>{{c.authorName}}</b> <span *ngIf="c.authorRole">({{c.authorRole | roleTranslate}})</span>
+        <span class="comment-date">{{c.createdAt | date:'short'}}</span>
+      </div>
+      <div class="comment-text">{{c.message}}</div>
+    </div>
+  </div>
+  <div class="add-comment" *ngIf="currentUser">
+    <textarea [(ngModel)]="newComment" placeholder="Ajouter un commentaire..." rows="2"></textarea>
+    <button (click)="postComment()">Envoyer</button>
+  </div>
+</div> 

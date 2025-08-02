@@ -1,194 +1,237 @@
-<div class="welcome-banner" [ngStyle]="{'background-image': 'url(' + welcomeImage + ')'}">
-  <div class="welcome-banner-overlay"></div>
-  <div class="welcome-banner-content">
-    <div class="welcome-banner-text">
-      <div class="welcome-date">{{ frenchDate }}</div>
-      <div class="welcome-greeting">Bonjour, <b>{{ userFirstName }} {{ userLastName }}</b></div>
+<!-- Dashboard moderne avec design light et dégradés lumineux -->
+<div class="light-dashboard">
+  <!-- Header identique à employee-home -->
+  <div class="welcome-banner" [ngStyle]="{'background-image': 'url(' + welcomeImage + ')'}">
+    <div class="welcome-banner-overlay"></div>
+    <div class="welcome-banner-content">
+      <div class="welcome-banner-text">
+        <div class="welcome-date">{{ frenchDate }}</div>
+        <div class="welcome-greeting">Bonjour, <b>{{ userFullName }}</b></div>
+        <div class="welcome-description">Gérez les demandes d'avance de salaire et suivez les performances intelligemment.</div>
+      </div>
+      <div class="welcome-banner-actions">
+        <button class="action-btn search-btn">
+          <i antIcon type="search" theme="outline"></i>
+        </button>
+        <button class="action-btn notification-btn">
+          <i antIcon type="bell" theme="outline"></i>
+          <span class="notification-badge"></span>
+        </button>
+        <button class="export-btn">
+          <i antIcon type="download" theme="outline"></i>
+          Exporter
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cartes de statistiques avec vraies images -->
+  <div class="stats-grid">
+    <!-- Carte 1: Demandes totales -->
+    <div class="stat-card total-requests">
+      <img [src]="cardImages[0]" class="card-bg-img" alt="Stat BG" />
+      <div class="card-overlay"></div>
+      <div class="card-header">
+        <div class="card-icon">
+          <i antIcon type="file-text" theme="outline"></i>
+          Demandes totales
+        </div>
+        <div class="card-trend positive">+12.4%</div>
+      </div>
+      <div class="card-value">{{ widgets[0]?.valeur || '0' }}</div>
+      <div class="card-actions">
+        <button class="view-details">Voir détails</button>
+        <button class="action-icon">
+          <i antIcon type="arrow-right" theme="outline"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Carte 2: Demandes validées -->
+    <div class="stat-card approved-requests">
+      <img [src]="cardImages[1]" class="card-bg-img" alt="Stat BG" />
+      <div class="card-overlay"></div>
+      <div class="card-header">
+        <div class="card-icon">
+          <i antIcon type="check-circle" theme="outline"></i>
+          Demandes validées
+        </div>
+        <div class="card-trend positive">+18.7%</div>
+      </div>
+      <div class="card-value">{{ widgets[1]?.valeur || '0' }}</div>
+      <div class="card-actions">
+        <button class="view-details">Voir détails</button>
+        <button class="action-icon">
+          <i antIcon type="arrow-right" theme="outline"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Carte 3: Montant total -->
+    <div class="stat-card total-amount">
+      <img [src]="cardImages[2]" class="card-bg-img" alt="Stat BG" />
+      <div class="card-overlay"></div>
+      <div class="card-header">
+        <div class="card-icon">
+          <i antIcon type="dollar" theme="outline"></i>
+          Montant total demandé
+        </div>
+        <div class="card-trend positive">+7.1%</div>
+      </div>
+      <div class="card-value">{{ widgets[4]?.valeur || '0 TND' }}</div>
+      <div class="card-actions">
+        <button class="view-details">Voir détails</button>
+        <button class="action-icon">
+          <i antIcon type="arrow-right" theme="outline"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graphiques -->
+  <div class="charts-grid">
+    <!-- Graphique d'évolution -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">
+          <i antIcon type="rise" theme="outline"></i>
+          Évolution des demandes
+        </div>
+        <button class="chart-action">Analyse</button>
+      </div>
+      <div class="chart-content">
+        <ng-container *ngIf="trends.length">
+          <apx-chart
+            [series]="[{ name: 'Demandes', data: trends }]"
+            [chart]="{ type: 'line', height: 250, background: 'transparent' }"
+            [xaxis]="{ categories: ['M-5', 'M-4', 'M-3', 'M-2', 'M-1', 'M'] }"
+            [colors]="['#8b5cf6']"
+            [stroke]="{ curve: 'smooth', width: 3 }"
+            [dataLabels]="{ enabled: false }"
+            [grid]="{ borderColor: '#e9ecef', strokeDashArray: 4 }"
+            [theme]="{ mode: 'light' }"
+          ></apx-chart>
+        </ng-container>
+        <ng-container *ngIf="!trends.length">
+          <div class="no-data">Aucune donnée disponible</div>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Graphique de répartition -->
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">
+          <i antIcon type="pie-chart" theme="outline"></i>
+          Répartition des statuts
+        </div>
+      </div>
+      <div class="chart-content">
+        <ng-container *ngIf="statusDistribution.length">
+          <apx-chart
+            [series]="statusDistribution"
+            [labels]="['Validées', 'Rejetées', 'En attente']"
+            [chart]="{ type: 'pie', height: 250, background: 'transparent' }"
+            [colors]="['#1cc88a', '#e74a3b', '#f6c23e']"
+            [theme]="{ mode: 'light' }"
+          ></apx-chart>
+        </ng-container>
+        <ng-container *ngIf="!statusDistribution.length">
+          <div class="no-data">Aucune donnée disponible</div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tableau des alertes -->
+  <div class="alerts-section">
+    <div class="alerts-header">
+      <h2 class="alerts-title">Demandes récentes</h2>
+      <button class="filters-btn">
+        <i antIcon type="filter" theme="outline"></i>
+        Filtres intelligents
+      </button>
+    </div>
+    <div class="alerts-table">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Employé</th>
+            <th>Montant</th>
+            <th>Statut</th>
+            <th>Date</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (req of recentRequests; track req) {
+            <tr class="table-row">
+              <td class="employee-cell">
+                <div class="employee-info">
+                  <div class="employee-avatar">
+                    <img [src]="getAvatarUrl(req.employeeEmail, req.employeeFullName, req.employeeProfilePicture)" 
+                         (error)="onImageError($event)" 
+                         alt="Avatar">
+                  </div>
+                  <span class="employee-name">{{ req.employeeFullName }}</span>
+                </div>
+              </td>
+              <td class="amount-cell">{{ req.requestedAmount }} TND</td>
+              <td class="status-cell">
+                <span class="status-badge" [ngClass]="{
+                  'status-pending': req.status === 'PENDING',
+                  'status-approved': req.status === 'APPROVED',
+                  'status-rejected': req.status === 'REJECTED'
+                }">
+                  {{ req.status === 'PENDING' ? 'En attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Rejetée' }}
+                </span>
+              </td>
+              <td class="date-cell">{{ req.requestDate | date:'shortDate' }}</td>
+              <td class="actions-cell">
+                <button class="action-btn" title="Voir détails">
+                  <i antIcon type="eye" theme="outline"></i>
+                </button>
+                <button class="action-btn" title="Modifier">
+                  <i antIcon type="edit" theme="outline"></i>
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Métriques supplémentaires -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-header">
+        <i antIcon type="tag" theme="outline"></i>
+        <span>Taux d'approbation</span>
+      </div>
+      <div class="metric-value">{{ (approvalRate * 100) | number:'1.0-0' }}%</div>
+      <div class="metric-progress">
+        <div class="progress-bar" [style.width]="(approvalRate * 100) + '%'"></div>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <i antIcon type="clock" theme="outline"></i>
+        <span>Temps moyen de traitement</span>
+      </div>
+      <div class="metric-value">2.3 jours</div>
+      <div class="metric-trend positive">-15% vs mois dernier</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-header">
+        <i antIcon type="warning" theme="outline"></i>
+        <span>Demandes urgentes</span>
+      </div>
+      <div class="metric-value">{{ widgets[2]?.valeur || '0' }}</div>
+      <div class="metric-trend negative">+8% vs mois dernier</div>
     </div>
   </div>
 </div>
-<div class="row">
-    <!-- Widgets dynamiques -->
-    <div class="row mb-4">
-      @for (widget of widgets; track widget) {
-        <div class="col-md-6 col-xl-3 mb-3">
-          <app-card [showHeader]="false" blockClass="dashboard-card">
-            <div class="d-flex align-items-center">
-              <div class="me-3">
-                <span class="avatar avatar-md rounded-circle {{ widget.couleur }}">
-                  <i class="f-20" [ngClass]="widget.icone"></i>
-                </span>
-              </div>
-              <div>
-                <h6 class="mb-1 text-muted">{{ widget.titre }}</h6>
-                <h4 class="mb-0">{{ widget.valeur }}</h4>
-              </div>
-            </div>
-          </app-card>
-        </div>
-      }
-    </div>
-
-    <!-- Graphiques -->
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <app-card [showHeader]="true" blockClass="dashboard-card">
-          <h6 class="mb-2">Évolution des demandes (6 derniers mois)</h6>
-          <ng-container *ngIf="trends.length">
-            <apx-chart
-              [series]="[{ name: 'Demandes', data: trends }]
-              "
-              [chart]="{ type: 'line', height: 250 }"
-              [xaxis]="{ categories: ['M-5', 'M-4', 'M-3', 'M-2', 'M-1', 'M'] }"
-              [colors]="['#4e73df']"
-              [stroke]="{ curve: 'smooth', width: 3 }"
-              [dataLabels]="{ enabled: false }"
-              [grid]="{ borderColor: '#f1f3f7', strokeDashArray: 4 }"
-            ></apx-chart>
-          </ng-container>
-          <ng-container *ngIf="!trends.length">
-            <div class="text-muted">Aucune donnée</div>
-          </ng-container>
-        </app-card>
-      </div>
-      <div class="col-md-6">
-        <app-card [showHeader]="true" blockClass="dashboard-card">
-          <h6 class="mb-2">Répartition des statuts</h6>
-          <ng-container *ngIf="statusDistribution.length">
-            <apx-chart
-              [series]="statusDistribution"
-              [labels]="['Validées', 'Rejetées', 'En attente']"
-              [chart]="{ type: 'pie', height: 250 }"
-              [colors]="['#1cc88a', '#e74a3b', '#f6c23e']"
-            ></apx-chart>
-          </ng-container>
-          <ng-container *ngIf="!statusDistribution.length">
-            <div class="text-muted">Aucune donnée</div>
-          </ng-container>
-        </app-card>
-      </div>
-    </div>
-    <div class="row mb-4">
-      <div class="col-md-6">
-        <app-card [showHeader]="true" blockClass="dashboard-card">
-          <h6 class="mb-2">Taux d'approbation</h6>
-          <div class="progress" style="height: 24px;">
-            <div class="progress-bar bg-success" role="progressbar" [style.width]="(approvalRate * 100) + '%'">
-              {{ (approvalRate * 100) | number:'1.0-0' }} %
-            </div>
-          </div>
-        </app-card>
-      </div>
-      <div class="col-md-6">
-        <app-card [showHeader]="true" blockClass="dashboard-card">
-          <h6 class="mb-2">Montant demandé vs approuvé</h6>
-          <apx-chart
-            [series]="[
-              { name: 'Demandé', data: [totalRequestedAmount] },
-              { name: 'Approuvé', data: [totalApprovedAmount] }
-            ]"
-            [chart]="{ type: 'bar', height: 250 }"
-            [xaxis]="{ categories: ['Montant'] }"
-            [colors]="['#4e73df', '#1cc88a']"
-            [plotOptions]="{ bar: { horizontal: false, columnWidth: '40%' } }"
-          ></apx-chart>
-        </app-card>
-      </div>
-    </div>
-
-    <!-- Table des demandes récentes -->
-    <div class="row">
-      <div class="col-12">
-        <app-card [showHeader]="true" blockClass="dashboard-card">
-          <h5 class="mb-3">10 dernières demandes</h5>
-          <div class="table-responsive">
-            <table class="table table-hover mb-0">
-              <thead>
-                <tr>
-                  <th>Employé</th>
-                  <th>Montant</th>
-                  <th>Statut</th>
-                  <th class="text-end">Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (req of recentRequests; track req) {
-                  <tr>
-                    <td>{{ req.employeeFullName }}</td>
-                    <td>{{ req.requestedAmount }} TND</td>
-                    <td>
-                      <span class="badge" [ngClass]="{
-                        'bg-warning': req.status === 'PENDING',
-                        'bg-success': req.status === 'APPROVED',
-                        'bg-danger': req.status === 'REJECTED'
-                      }">
-                        {{ req.status === 'PENDING' ? 'En attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Rejetée' }}
-                      </span>
-                    </td>
-                    <td class="text-end">{{ req.requestDate | date:'shortDate' }}</td>
-                  </tr>
-                }
-              </tbody>
-            </table>
-          </div>
-        </app-card>
-      </div>
-    </div>
-    <div class="col-md-12 col-xl-8">
-      <app-monthly-bar-chart />
-    </div>
-    <div class="col-md-12 col-xl-4">
-      <app-income-overview-chart />
-    </div>
-  
-    <div class="col-md-12 col-xl-8">
-      <app-sales-report-chart />
-    </div>
-    <div class="col-md-12 col-xl-4">
-      <h5 class="mb-3">Historique des actions RH</h5>
-      <div class="card">
-        <div class="list-group list-group-flush">
-          @for (action of rhActions; track action) {
-            <a href="javascript:" class="list-group-item list-group-item-action px-3">
-              <div class="d-flex">
-                <div class="flex-shrink-0">
-                  <div class="avatar avatar-s rounded-circle">
-                    <img [src]="action.avatar" alt="avatar" width="32" height="32" />
-                  </div>
-                </div>
-                <div class="flex-grow-1 ms-3">
-                  <h6 class="mb-1">{{ action.title }}</h6>
-                  <p class="mb-0 text-muted">{{ action.date | date:'short' }}</p>
-                </div>
-                <div class="flex-shrink-0 text-end">
-                  <span class="badge {{ action.badge }}">{{ action.status }}</span>
-                </div>
-              </div>
-            </a>
-          }
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-body">
-          <div class="row justify-content-between">
-            <div class="col-auto">
-              <h5>Aide & Support Chat</h5>
-              <p class="mb-3">Réponse typique dans les 5 min</p>
-            </div>
-            <div class="col-auto">
-              <div class="user-group mb-3">
-                <img src="assets/images/user/avatar-1.jpg" alt="image" />
-                <img src="assets/images/user/avatar-2.jpg" alt="image" />
-                <img src="assets/images/user/avatar-3.jpg" alt="image" />
-              </div>
-            </div>
-          </div>
-          <div class="d-grid">
-            <div class="btn btn-primary">Besoin d'aide ?</div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- [ sample-page ] end -->
-  </div>
   

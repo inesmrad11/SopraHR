@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { SalaryAdvanceService } from '../../../core/services/salary-advance.service';
 import { SalaryAdvanceRequest } from '../../../core/models/salary-advance-request.model';
 import { interval, Subscription } from 'rxjs';
@@ -9,11 +9,23 @@ import { ValidationModal } from '../validation-modal/validation-modal';
 import { FormsModule } from '@angular/forms';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { RouterModule } from '@angular/router';
+import { BreadcrumbComponent, BreadcrumbItem } from 'src/app/theme/shared/components/breadcrumb/breadcrumb.component';
+import { IconService, IconDirective } from '@ant-design/icons-angular';
+import { 
+  SearchOutline, 
+  BellOutline, 
+  DownloadOutline, 
+  CloseOutline, 
+  ToolOutline, 
+  EyeOutline, 
+  CheckOutline, 
+  ExclamationCircleOutline
+} from '@ant-design/icons-angular/icons';
 
 @Component({
   selector: 'app-hr-requests',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, ValidationModal, FormsModule, RouterModule],
+  imports: [CommonModule, DatePipe, DecimalPipe, ValidationModal, FormsModule, RouterModule, BreadcrumbComponent, IconDirective],
   templateUrl: './hr-requests.html',
   styleUrls: ['./hr-requests.scss'],
   animations: [
@@ -39,34 +51,106 @@ export class HrRequests implements OnInit, OnDestroy {
   modalVisible = false;
   modalAction: 'approve' | 'reject' = 'approve';
   modalRequest: SalaryAdvanceRequest | null = null;
+  // Filter properties
   filterName = '';
-  filterStatus = '';
   filterFrom = '';
   filterTo = '';
+  // Suppression de filterStatus car on ne traite que les demandes en attente
+
+  // Pagination
+  currentPage = 1;
+  itemsPerPage = 10;
+  totalItems = 0;
+  itemsPerPageOptions = [5, 10, 15, 25];
   statusList = [RequestStatus.PENDING, RequestStatus.APPROVED, RequestStatus.REJECTED];
   private ws$?: WebSocketSubject<any>;
   successMessage = '';
   errorMessage = '';
-  loadingActionId: number | null = null;
   selectedRequest: SalaryAdvanceRequest | null = null;
   modalComment: string = '';
   modalLoading: boolean = false;
   modalError: string = '';
+  
+  // Nouvelles propriétés pour le design harmonisé
+  showSearch = false;
+  showNotifications = false;
+  showFilters = false;
+  currentDate = new Date();
+  notifications: any[] = [];
+  
+  breadcrumbs: BreadcrumbItem[] = [
+    { label: 'Accueil', route: '/hr/hr-statistics' },
+    { label: 'Toutes les demandes', active: true }
+  ];
+
+  private iconService = inject(IconService);
+
+  constructor(private salaryAdvanceService: SalaryAdvanceService) {
+    // Add Ant Design icons
+    this.iconService.addIcon(
+      SearchOutline, 
+      BellOutline, 
+      DownloadOutline, 
+      CloseOutline, 
+      ToolOutline, 
+      EyeOutline, 
+      CheckOutline, 
+      ExclamationCircleOutline
+    );
+  }
 
   get filteredRequests() {
     return this.requests.filter(req => {
       const matchesName = !this.filterName || (req.employeeFullName || '').toLowerCase().includes(this.filterName.toLowerCase());
-      const matchesStatus = !this.filterStatus || req.status === this.filterStatus;
       const date = new Date(req.requestDate);
       const from = this.filterFrom ? new Date(this.filterFrom) : null;
       const to = this.filterTo ? new Date(this.filterTo) : null;
       const matchesFrom = !from || date >= from;
       const matchesTo = !to || date <= to;
-      return matchesName && matchesStatus && matchesFrom && matchesTo;
+      
+      // Seulement les demandes en attente de traitement
+      const isPending = req.status === RequestStatus.PENDING;
+      
+      return matchesName && matchesFrom && matchesTo && isPending;
     });
   }
 
-  constructor(private salaryAdvanceService: SalaryAdvanceService) {}
+  // Pagination methods
+  get paginatedRequests() {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredRequests.slice(startIndex, endIndex);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredRequests.length / this.itemsPerPage);
+  }
+
+  get paginationInfo(): string {
+    const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const end = Math.min(this.currentPage * this.itemsPerPage, this.filteredRequests.length);
+    return `${start}-${end} sur ${this.filteredRequests.length}`;
+  }
+
+  onItemsPerPageChange(): void {
+    this.currentPage = 1; // Reset to first page when changing items per page
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  get pendingRequests(): number {
+    return this.requests.filter(req => req.status === RequestStatus.PENDING).length;
+  }
 
   ngOnInit() {
     this.fetchRequests();
@@ -119,15 +203,6 @@ export class HrRequests implements OnInit, OnDestroy {
     }
   }
 
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case 'PENDING': return '⏳';
-      case 'APPROVED': return '✔️';
-      case 'REJECTED': return '❌';
-      default: return 'ℹ️';
-    }
-  }
-
   getStatusLabel(status: string): string {
     switch (status) {
       case 'PENDING': return 'EN ATTENTE';
@@ -155,37 +230,7 @@ export class HrRequests implements OnInit, OnDestroy {
     // TODO: navigate or open details modal
   }
 
-  onApprove(request: SalaryAdvanceRequest) {
-    this.loadingActionId = request.id;
-    this.salaryAdvanceService.approveRequest(request.id, '').subscribe({
-      next: () => {
-        this.successMessage = 'Demande validée avec succès.';
-        this.fetchRequests();
-      },
-      error: (err) => {
-        this.errorMessage = err.message || 'Erreur lors de la validation.';
-      },
-      complete: () => {
-        this.loadingActionId = null;
-      }
-    });
-  }
 
-  onReject(request: SalaryAdvanceRequest) {
-    this.loadingActionId = request.id;
-    this.salaryAdvanceService.rejectRequest(request.id, '').subscribe({
-      next: () => {
-        this.successMessage = 'Demande rejetée avec succès.';
-        this.fetchRequests();
-      },
-      error: (err) => {
-        this.errorMessage = err.message || 'Erreur lors du rejet.';
-      },
-      complete: () => {
-        this.loadingActionId = null;
-      }
-    });
-  }
 
   onModalConfirm(event: {action: 'approve' | 'reject', comment: string}) {
     if (!this.modalRequest) return;
@@ -282,5 +327,144 @@ export class HrRequests implements OnInit, OnDestroy {
         this.modalLoading = false;
       }
     });
+  }
+
+  // Nouvelles méthodes pour le design harmonisé
+  toggleSearch() {
+    this.showSearch = !this.showSearch;
+  }
+
+  closeSearch() {
+    this.showSearch = false;
+  }
+
+  toggleNotifications() {
+    this.showNotifications = !this.showNotifications;
+  }
+
+  closeNotifications() {
+    this.showNotifications = false;
+  }
+
+
+  getEmployeeInitials(fullName: string): string {
+    return fullName
+      .split(' ')
+      .map(name => name.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  }
+
+  hasProfilePicture(request: SalaryAdvanceRequest): boolean {
+    return !!request.employeeProfilePicture;
+  }
+
+  onImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+
+  onImageLoad(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'block';
+  }
+
+  getNotificationIcon(type: string): string {
+    switch (type) {
+      case 'success': return 'check-circle';
+      case 'warning': return 'exclamation-circle';
+      case 'error': return 'close-circle';
+      case 'info': return 'info-circle';
+      default: return 'bell';
+    }
+  }
+
+  approveRequest(req: SalaryAdvanceRequest) {
+    // Vérification préalable pour éviter les actions multiples
+    if (req.status !== 'PENDING') {
+      this.showError('Cette demande ne peut plus être validée.');
+      return;
+    }
+
+    this.salaryAdvanceService.approveRequest(req.id, '').subscribe({
+      next: () => {
+        this.showSuccess('Demande validée avec succès.');
+        this.fetchRequests();
+      },
+      error: (err) => {
+        this.handleError(err, 'validation');
+      }
+    });
+  }
+
+  rejectRequest(req: SalaryAdvanceRequest) {
+    // Vérification préalable pour éviter les actions multiples
+    if (req.status !== 'PENDING') {
+      this.showError('Cette demande ne peut plus être rejetée.');
+      return;
+    }
+
+    this.salaryAdvanceService.rejectRequest(req.id, '').subscribe({
+      next: () => {
+        this.showSuccess('Demande rejetée avec succès.');
+        this.fetchRequests();
+      },
+      error: (err) => {
+        this.handleError(err, 'rejet');
+      }
+    });
+  }
+
+  applyFilters() {
+    // Les filtres sont appliqués automatiquement via le getter filteredRequests
+  }
+
+  toggleFilters() {
+    this.showFilters = !this.showFilters;
+  }
+
+  clearFilters() {
+    this.filterFrom = '';
+    this.filterTo = '';
+    this.applyFilters();
+  }
+
+  // Méthodes pour la gestion professionnelle des messages
+  private showSuccess(message: string): void {
+    this.successMessage = message;
+    this.errorMessage = ''; // Effacer les erreurs précédentes
+    setTimeout(() => {
+      this.successMessage = '';
+    }, 4000);
+  }
+
+  private showError(message: string): void {
+    this.errorMessage = message;
+    this.successMessage = ''; // Effacer les succès précédents
+    setTimeout(() => {
+      this.errorMessage = '';
+    }, 6000);
+  }
+
+  private handleError(err: any, action: string): void {
+    let errorMessage = '';
+    
+    // Gestion spécifique des erreurs selon le type
+    if (err.status === 400) {
+      errorMessage = `Action impossible : ${err.error?.message || 'Données invalides'}`;
+    } else if (err.status === 403) {
+      errorMessage = 'Vous n\'avez pas les permissions pour effectuer cette action.';
+    } else if (err.status === 404) {
+      errorMessage = 'La demande n\'existe plus ou a été supprimée.';
+    } else if (err.status === 409) {
+      errorMessage = 'Cette demande a déjà été traitée par un autre utilisateur.';
+    } else if (err.status >= 500) {
+      errorMessage = 'Erreur serveur. Veuillez réessayer dans quelques instants.';
+    } else {
+      errorMessage = `Erreur lors du ${action} : ${err.error?.message || err.message || 'Erreur inconnue'}`;
+    }
+
+    this.showError(errorMessage);
   }
 }

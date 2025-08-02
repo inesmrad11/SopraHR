@@ -5,7 +5,8 @@ import { RouterModule, Router } from '@angular/router';
 // project import
 import { AuthService } from 'src/app/core/services/auth.service';
 import { User } from 'src/app/core/models/user.model';
-import { NotificationCenterComponent } from 'src/app/shared/components/notification/notification-center.component';
+import { NotificationCenterComponent } from 'src/app/shared/components/notification/notification-center/notification-center.component';
+import { RoleTranslatePipe } from 'src/app/core/pipes/role-translate.pipe';
 
 // icon
 import { IconService, IconDirective } from '@ant-design/icons-angular';
@@ -30,14 +31,36 @@ import {
   AppstoreOutline,
   LayoutOutline,
   MailOutline,
-  FullscreenOutline
+  FullscreenOutline,
+  // Notification icons
+  InfoCircleOutline,
+  WarningOutline,
+  CloseCircleOutline,
+  RollbackOutline,
+  SyncOutline,
+  PaperClipOutline,
+  TrophyOutline,
+  RiseOutline,
+  FileTextOutline,
+  CalendarOutline,
+  ExclamationCircleOutline,
+  BarChartOutline,
+  AlertOutline,
+  LineChartOutline,
+  ToolOutline,
+  DownloadOutline,
+  BulbOutline,
+  UserDeleteOutline,
+  SmileOutline,
+  EyeOutline,
+  ClockCircleOutline
 } from '@ant-design/icons-angular/icons';
 import { NgbDropdownModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgScrollbarModule } from 'ngx-scrollbar';
 
 @Component({
   selector: 'app-nav-right',
-  imports: [IconDirective, RouterModule, NgScrollbarModule, NgbNavModule, NgbDropdownModule, NotificationCenterComponent],
+  imports: [IconDirective, RouterModule, NgScrollbarModule, NgbNavModule, NgbDropdownModule, NotificationCenterComponent, RoleTranslatePipe],
   templateUrl: './nav-right.component.html',
   styleUrls: ['./nav-right.component.scss']
 })
@@ -52,7 +75,7 @@ export class NavRightComponent {
 
   user: User | null = null;
 
-  constructor() {
+  constructor(private router: Router) {
     this.windowWidth = window.innerWidth;
     this.iconService.addIcon(
       ...[
@@ -76,7 +99,29 @@ export class NavRightComponent {
         AppstoreOutline,
         LayoutOutline,
         MailOutline,
-        FullscreenOutline
+        FullscreenOutline,
+        // Notification icons
+        InfoCircleOutline,
+        WarningOutline,
+        CloseCircleOutline,
+        RollbackOutline,
+        SyncOutline,
+        PaperClipOutline,
+        TrophyOutline,
+        RiseOutline,
+        FileTextOutline,
+        CalendarOutline,
+        ExclamationCircleOutline,
+        BarChartOutline,
+        AlertOutline,
+        LineChartOutline,
+        ToolOutline,
+        DownloadOutline,
+        BulbOutline,
+        UserDeleteOutline,
+        SmileOutline,
+        EyeOutline,
+        ClockCircleOutline
       ]
     );
     this.authService.currentUser$.subscribe(user => {
@@ -84,10 +129,28 @@ export class NavRightComponent {
     });
   }
 
+  animateIcon(icon: string) {
+    const el = document.querySelector('.pc-head-link i[anticon][type="' + icon + '"]');
+    if (el) {
+      el.classList.add('icon-animate');
+      setTimeout(() => el.classList.remove('icon-animate'), 600);
+    }
+  }
+
   onLogoutClick(event: Event) {
     event.preventDefault();
     this.authService.logout();
     (inject(Router)).navigate(['/login']);
+  }
+
+  goToHRMessages() {
+    this.animateIcon('mail');
+    this.router.navigate(['/hr/messages']);
+  }
+
+  onBellClick() {
+    this.animateIcon('bell');
+    // Ouvre le panneau de notifications si besoin
   }
 
   profile = [
